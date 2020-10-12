@@ -10,14 +10,13 @@ create or replace package DM.PKG_FV_CALC as
                 ,p_leasing_subject_type_cd varchar2 -- Типа лизингового имущества
                 ,p_currency_letter_cd varchar2 -- Валюта типа ставки
                 ,p_fixfloat varchar2 -- Признак фиксированной плавающей ставки
-                ,p_federal_low_type_key number -- Ключ Сделки в рамках (ФЗ)
+                ,p_contracts_terms_key number -- Ключ условий контракта
                 ,p_ftp_calculation_method_key number -- Ключи Методики расчета ставки FTP
                 ,p_schedule_file_name varchar2 -- График погашения ОД
                 ,p_early_spread_type_key number -- Ключ вида спреда на досрочное погашение
                 ,p_moratory_term_amt number -- Срок моратория
                 ,p_fix_period_amt number -- Период фиксации
                 ,p_use_period_amt number -- Период использования
-                ,p_formulation_ind_cncl_key number -- Ключ Формулировки отмены индикаторов
                 ,p_ind_cncl_term_amt number -- Срок отмены тестирования
                 ,p_balance_debt_amt number -- Балансовая величина задолженности, руб.
                 ,p_market_value_amt number --  Рыночная стоимость имущества
@@ -77,13 +76,12 @@ create or replace package body DM.PKG_FV_CALC as
             currency_letter_cd,
             fixfloat,
             currate_type_key,
-            federal_low_type_key,
+            contracts_terms_key,
             ftp_calculation_method_key,
             early_spread_type_key,
             moratory_term_amt,
             fix_period_amt,
             use_period_amt,
-            formulation_ind_cncl_key,
             ind_cncl_term_amt,
             balance_debt_amt,
             market_value_amt,
@@ -102,13 +100,12 @@ create or replace package body DM.PKG_FV_CALC as
             p_fair_value.currency_letter_cd,
             p_fair_value.fixfloat,
             p_fair_value.currate_type_key,
-            p_fair_value.federal_low_type_key,
+            p_fair_value.contracts_terms_key,
             p_fair_value.ftp_calculation_method_key,
             p_fair_value.early_spread_type_key,
             p_fair_value.moratory_term_amt,
             p_fair_value.fix_period_amt,
             p_fair_value.use_period_amt,
-            p_fair_value.formulation_ind_cncl_key,
             p_fair_value.ind_cncl_term_amt,
             p_fair_value.balance_debt_amt,
             p_fair_value.market_value_amt,
@@ -167,7 +164,7 @@ create or replace package body DM.PKG_FV_CALC as
             gv_exc_flag := 'N';
             raise;
     end;
-
+/*
     function get_treasury_spread(p_fair_value t_fair_value, p_treasury_spread_type varchar2, p_with_ind_cancel boolean default false) return number is
         v_value number;
     begin
@@ -229,7 +226,7 @@ create or replace package body DM.PKG_FV_CALC as
             gv_exc_flag := 'N';
             raise;
     end;
-
+*/
     function get_over_fv_max_term(p_fair_value t_fair_value, p_rate_type_cd varchar2 default null) return number is
         cursor cur_max_term is
             select max_term from DWH.FV_MAX_TERM
@@ -315,14 +312,7 @@ create or replace package body DM.PKG_FV_CALC as
         procedure i_do_calc is
         begin
             if p_fair_value.fix_period_amt is null then
-
-
-
-
-
-                FIX_SPREAD
-
-
+                null; --FIX_SPREAD
             end if;
         end;
     begin
@@ -339,6 +329,7 @@ create or replace package body DM.PKG_FV_CALC as
         v_fv_max_term number;
         procedure i_do_calc is
         begin
+            /*
             if (p_fair_value.federal_low_type_key = 1 -- Не в рамках ФЗ
                 and p_fair_value.formulation_ind_cncl_key != 3) --Формулировка 3
                 or
@@ -368,7 +359,7 @@ create or replace package body DM.PKG_FV_CALC as
                 p_fair_value.one_cncl_sread_v := get_treasury_spread(p_fair_value, 'ONE_CNCL_INDC');
                 p_fair_value.barrier := get_treasury_spread_by_currency(p_fair_value, 'BARRIER');
             end if;
-
+            */
             p_fair_value.cncl_sread_v := nvl(p_fair_value.cncl_sread_v, 0) + nvl(p_fair_value.full_cncl_sread_v, 0)
                                          + nvl(p_fair_value.term_cncl_sread_v, 0) + nvl(p_fair_value.one_cncl_sread_v, 0);
         end;
@@ -570,14 +561,13 @@ create or replace package body DM.PKG_FV_CALC as
         ,p_leasing_subject_type_cd varchar2 -- Типа лизингового имущества
         ,p_currency_letter_cd varchar2 -- Валюта типа ставки
         ,p_fixfloat varchar2 -- Признак фиксированной плавающей ставки
-        ,p_federal_low_type_key number -- Ключ Сделки в рамках (ФЗ)
+        ,p_contracts_terms_key number -- Ключ условий контракта
         ,p_ftp_calculation_method_key number -- Ключи Методики расчета ставки FTP
         ,p_schedule_file_name varchar2 -- График погашения ОД
         ,p_early_spread_type_key number -- Ключ вида спреда на досрочное погашение
         ,p_moratory_term_amt number -- Срок моратория
         ,p_fix_period_amt number -- Период фиксации
         ,p_use_period_amt number -- Период использования
-        ,p_formulation_ind_cncl_key number -- Ключ Формулировки отмены индикаторов
         ,p_ind_cncl_term_amt number -- Срок отмены тестирования
         ,p_balance_debt_amt number -- Балансовая величина задолженности, руб.
         ,p_market_value_amt number --  Рыночная стоимость имущества
@@ -598,13 +588,12 @@ create or replace package body DM.PKG_FV_CALC as
             v_fair_value.currency_letter_cd := p_currency_letter_cd;
             v_fair_value.fixfloat := p_fixfloat;
             v_fair_value.currate_type_key := get_rate_type(p_currency_letter_cd, p_fixfloat);
-            v_fair_value.federal_low_type_key := p_federal_low_type_key;
+            v_fair_value.contracts_terms_key := p_contracts_terms_key;
             v_fair_value.ftp_calculation_method_key := p_ftp_calculation_method_key;
             v_fair_value.early_spread_type_key := p_early_spread_type_key;
             v_fair_value.moratory_term_amt := p_moratory_term_amt;
             v_fair_value.fix_period_amt := p_fix_period_amt;
             v_fair_value.use_period_amt := p_use_period_amt;
-            v_fair_value.formulation_ind_cncl_key := p_formulation_ind_cncl_key;
             v_fair_value.ind_cncl_term_amt := p_ind_cncl_term_amt;
             v_fair_value.balance_debt_amt := p_balance_debt_amt;
             v_fair_value.market_value_amt := p_market_value_amt;
