@@ -132,10 +132,10 @@ create or replace package body DM.PKG_FV_CALC as
                EARLY_SPREAD_V = p_fair_value.EARLY_SPREAD_V,
                REVENUE_COMISSION_V = p_fair_value.REVENUE_COMISSION_V,
                FIX_SPREAD_V = p_fair_value.FIX_SPREAD_V,
-               CNCL_SREAD_V = p_fair_value.CNCL_SREAD_V,
-               FULL_CNCL_SREAD_V = p_fair_value.FULL_CNCL_SREAD_V,
-               TERM_CNCL_SREAD_V = p_fair_value.TERM_CNCL_SREAD_V,
-               ONE_CNCL_SREAD_V = p_fair_value.ONE_CNCL_SREAD_V
+               CNCL_SPREAD_V = p_fair_value.CNCL_SPREAD_V,
+               FULL_CNCL_SPREAD_V = p_fair_value.FULL_CNCL_SPREAD_V,
+               TERM_CNCL_SPREAD_V = p_fair_value.TERM_CNCL_SPREAD_V,
+               ONE_CNCL_SPREAD_V = p_fair_value.ONE_CNCL_SPREAD_V
         where CALCULATION_ID = p_fair_value.calculation_id;
     exception
         when others then
@@ -146,7 +146,8 @@ create or replace package body DM.PKG_FV_CALC as
     end;
 
     function get_rate_type(p_currency_letter_cd varchar2,
-                           p_fixfloat varchar2) return number is
+                           p_fixfloat varchar2,
+                           p_contracts_terms_key number) return number is
         v_currate_type_key number;
     begin
         dbms_application_info.set_action(action_name => 'get_rate_type');
@@ -154,12 +155,14 @@ create or replace package body DM.PKG_FV_CALC as
           into v_currate_type_key
           from DWH.CURRATE_TYPES
          where CURRENCY_LETTER_CD = p_currency_letter_cd
-           and FIXFLOAT = p_fixfloat;
+           and FIXFLOAT = p_fixfloat
+           and CONTRACTS_TERMS_KEY = p_contracts_terms_key;
         return v_currate_type_key;
     exception
         when others then
             dm.u_log(GC_PACKAGE,'get_rate_type/error',
-                     'Ошибка при получении DWH.CURRATE_TYPES по CURRENCY_LETTER_CD='''||p_currency_letter_cd||''', FIXFLOAT='''||p_fixfloat||''' '
+                     'Ошибка при получении DWH.CURRATE_TYPES по CURRENCY_LETTER_CD='''||p_currency_letter_cd
+                     ||''', FIXFLOAT='''||p_fixfloat||''' CONTRACTS_TERMS_KEY='||p_contracts_terms_key
                      ||sqlerrm);
             gv_exc_flag := 'N';
             raise;
@@ -335,33 +338,33 @@ create or replace package body DM.PKG_FV_CALC as
                 or
                (p_fair_value.federal_low_type_key != 1
                 and p_fair_value.ind_cncl_term_amt is null) then
-                p_fair_value.cncl_sread_v := 0;
+                p_fair_value.cncl_SPREAD_v := 0;
                 return;
             end if;
             v_fv_max_term := get_over_fv_max_term(p_fair_value, 'CNCL_SREAD'); -- Спред за отмену индикаторов
             if not v_fv_max_term is null then
-                p_fair_value.cncl_sread_v := v_fv_max_term;
+                p_fair_value.cncl_SPREAD_v := v_fv_max_term;
                 return;
             end if;
 
             if p_fair_value.federal_low_type_key in (2,3) -- 44-ФЗ  223-ФЗ
                and p_fair_value.formulation_ind_cncl_key = 3 then -- Формулировка 3
-                p_fair_value.full_cncl_sread_v := get_treasury_spread(p_fair_value, 'FULL_CNCL_INDC');
+                p_fair_value.full_cncl_SPREAD_v := get_treasury_spread(p_fair_value, 'FULL_CNCL_INDC');
             end if;
 
             if p_fair_value.federal_low_type_key = 1 -- Не в рамках ФЗ
                 and p_fair_value.formulation_ind_cncl_key = 3 then -- Формулировка 3
-                p_fair_value.term_cncl_sread_v := get_treasury_spread(p_fair_value, 'TERM_CNCL_INDC', true);
+                p_fair_value.term_cncl_SPREAD_v := get_treasury_spread(p_fair_value, 'TERM_CNCL_INDC', true);
             end if;
 
             if p_fair_value.federal_low_type_key != 3 -- Формулировка 3
                and p_fair_value.formulation_ind_cncl_key in (1, 4) then -- Формулировка 1, Формулировка 4
-                p_fair_value.one_cncl_sread_v := get_treasury_spread(p_fair_value, 'ONE_CNCL_INDC');
+                p_fair_value.one_cncl_SPREAD_v := get_treasury_spread(p_fair_value, 'ONE_CNCL_INDC');
                 p_fair_value.barrier := get_treasury_spread_by_currency(p_fair_value, 'BARRIER');
             end if;
             */
-            p_fair_value.cncl_sread_v := nvl(p_fair_value.cncl_sread_v, 0) + nvl(p_fair_value.full_cncl_sread_v, 0)
-                                         + nvl(p_fair_value.term_cncl_sread_v, 0) + nvl(p_fair_value.one_cncl_sread_v, 0);
+            p_fair_value.cncl_SPREAD_v := nvl(p_fair_value.cncl_SPREAD_v, 0) + nvl(p_fair_value.full_cncl_SPREAD_v, 0)
+                                         + nvl(p_fair_value.term_cncl_SPREAD_v, 0) + nvl(p_fair_value.one_cncl_SPREAD_v, 0);
         end;
     begin
         dbms_application_info.set_action(action_name => 'c_t_s_compensate_indicator');
@@ -413,7 +416,8 @@ create or replace package body DM.PKG_FV_CALC as
             select LGD
               into v_lgd
               from DWH.REF_LGD
-             where LEASING_SUBJECT_TYPE_CD = p_fair_value.leasing_subject_type_cd and LGD_TYPE_CD = 'RES';
+             where LEASING_SUBJECT_TYPE_CD = p_fair_value.leasing_subject_type_cd and LGD_TYPE_CD = 'RES'
+               and VALID_TO_DTTM = GC_EOW and p_fair_value.SNAPSHOT_DT between BEGIN_DT and END_DT;
         exception when no_data_found then
             dm.u_log(GC_PACKAGE,'calc_credit_risk_premium','no_data_found at DWH.REF_LGD for LEASING_SUBJECT_TYPE_CD='||p_fair_value.leasing_subject_type_cd
                                 ||' LGD_TYPE_CD=''RES''');
@@ -587,7 +591,7 @@ create or replace package body DM.PKG_FV_CALC as
             v_fair_value.leasing_subject_type_cd := p_leasing_subject_type_cd;
             v_fair_value.currency_letter_cd := p_currency_letter_cd;
             v_fair_value.fixfloat := p_fixfloat;
-            v_fair_value.currate_type_key := get_rate_type(p_currency_letter_cd, p_fixfloat);
+            v_fair_value.currate_type_key := get_rate_type(p_currency_letter_cd, p_fixfloat, p_contracts_terms_key);
             v_fair_value.contracts_terms_key := p_contracts_terms_key;
             v_fair_value.ftp_calculation_method_key := p_ftp_calculation_method_key;
             v_fair_value.early_spread_type_key := p_early_spread_type_key;

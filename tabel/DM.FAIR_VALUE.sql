@@ -36,10 +36,10 @@ create table DM.FAIR_VALUE (
   EARLY_SPREAD_V NUMBER,
   REVENUE_COMISSION_V NUMBER,
   FIX_SPREAD_V NUMBER,
-  CNCL_SREAD_V NUMBER,
-  FULL_CNCL_SREAD_V NUMBER,
-  TERM_CNCL_SREAD_V NUMBER,
-  ONE_CNCL_SREAD_V NUMBER
+  CNCL_SPREAD_V NUMBER,
+  FULL_CNCL_SPREAD_V NUMBER,
+  TERM_CNCL_SPREAD_V NUMBER,
+  ONE_CNCL_SPREAD_V NUMBER
 )
 /
 COMMENT ON table DM.FAIR_VALUE IS 'Таблица расчетов (параметры запуска+результат)';
@@ -79,7 +79,7 @@ COMMENT ON COLUMN DM.FAIR_VALUE.MAINTENENCE_COSTS_V is 'АХР ВТБЛ';
 COMMENT ON COLUMN DM.FAIR_VALUE.EARLY_SPREAD_V is 'Спред за досрочное погашение';
 COMMENT ON COLUMN DM.FAIR_VALUE.REVENUE_COMISSION_V is 'Комиссия за обязательство';
 COMMENT ON COLUMN DM.FAIR_VALUE.FIX_SPREAD_V is 'Спред за фиксацию ставки';
-COMMENT ON COLUMN DM.FAIR_VALUE.CNCL_SREAD_V is 'Спред за отсутствие/отмену индикаторов';
-COMMENT ON COLUMN DM.FAIR_VALUE.FULL_CNCL_SREAD_V is 'Спред за отсутствие/полную отмену индикаторов';
-COMMENT ON COLUMN DM.FAIR_VALUE.TERM_CNCL_SREAD_V is 'Спред за отмену индикаторов на неполный срок';
-COMMENT ON COLUMN DM.FAIR_VALUE.ONE_CNCL_SREAD_V is 'Спреды за отмену одного индикатора';
+COMMENT ON COLUMN DM.FAIR_VALUE.CNCL_SPREAD_V is 'Спред за отсутствие/отмену индикаторов';
+COMMENT ON COLUMN DM.FAIR_VALUE.FULL_CNCL_SPREAD_V is 'Спред за отсутствие/полную отмену индикаторов';
+COMMENT ON COLUMN DM.FAIR_VALUE.TERM_CNCL_SPREAD_V is 'Спред за отмену индикаторов на неполный срок';
+COMMENT ON COLUMN DM.FAIR_VALUE.ONE_CNCL_SPREAD_V is 'Спреды за отмену одного индикатора';
