@@ -66,6 +66,7 @@ create or replace package body DM.PKG_FV_CALC as
     begin
         insert into DM.FAIR_VALUE (
             CALCULATION_ID,
+            report_dt,
             snapshot_dt,
             client_name,
             term_amt,
@@ -90,6 +91,7 @@ create or replace package body DM.PKG_FV_CALC as
         )
         values (
             DM.FAIR_VALUE_SEQ.nextval,
+            sysdate,
             p_fair_value.snapshot_dt,
             p_fair_value.client_name,
             p_fair_value.term_amt,
@@ -410,22 +412,12 @@ create or replace package body DM.PKG_FV_CALC as
 
     -- Премия за кредитный риск (надбавка на покрытие риска дефолта клиента)
     procedure calc_credit_risk_premium(p_fair_value in out nocopy t_fair_value) is
-        v_rating_model_key number;
         v_lgd number;
         v_PD1_MACRO number;
     begin
         dbms_application_info.set_action(action_name => 'calc_credit_risk_premium');
         dm.u_log(GC_PACKAGE,'calc_credit_risk_premium/BEGIN','Премия за кредитный риск');
 
-        begin
-            select RATING_MODEL_KEY
-              into v_rating_model_key
-              from DWH.RANK_MODELS
-             where RANK_MODEL_KEY = p_fair_value.ranking_model_key;  -- rank as rating
-        exception when no_data_found then
-            dm.u_log(GC_PACKAGE,'calc_credit_risk_premium','no_data_found at DWH.RANK_MODELS for RANK_MODEL_KEY='||p_fair_value.ranking_model_key);
-            raise;
-        end;
         begin
             select LGD
               into v_lgd
@@ -440,10 +432,10 @@ create or replace package body DM.PKG_FV_CALC as
             select PD1_MACRO
               into v_PD1_MACRO
               from DWH.PD_CORP
-             where RANK_MODEL_KEY = v_rating_model_key and RAT_ON_DATE = p_fair_value.rating_nam
+             where RANK_MODEL_KEY = p_fair_value.rating_model_key and RAT_ON_DATE = p_fair_value.rating_nam
                and VALID_TO_DTTM = GC_EOW and p_fair_value.SNAPSHOT_DT between ST_DATE and END_DATE;
         exception when no_data_found then
-            dm.u_log(GC_PACKAGE,'calc_credit_risk_premium','no_data_found at DWH.PD_CORP for RANK_MODEL_KEY='||v_rating_model_key
+            dm.u_log(GC_PACKAGE,'calc_credit_risk_premium','no_data_found at DWH.PD_CORP for RANK_MODEL_KEY(as rating)='||p_fair_value.rating_model_key
                                 ||'RAT_ON_DATE='||p_fair_value.rating_nam);
             raise;
         end;
@@ -461,7 +453,6 @@ create or replace package body DM.PKG_FV_CALC as
         v_E1 number;
         v_E2 number;
         v_LGD number;
-        v_rating_model_key number;
         v_PD number;
         v_correction_R number;
         v_R number;
@@ -488,27 +479,18 @@ create or replace package body DM.PKG_FV_CALC as
                  else (.35 * v_E1 + .045 * v_E2) / p_fair_value.balance_debt_amt end;
 
         begin
-            select RATING_MODEL_KEY
-              into v_rating_model_key
-              from DWH.RANK_MODELS
-             where RANK_MODEL_KEY = p_fair_value.ranking_model_key; -- rank as rating
-        exception when no_data_found then
-            dm.u_log(GC_PACKAGE,'calc_pay_economic_capital','no_data_found at DWH.RANK_MODELS for RANK_MODEL_KEY='||p_fair_value.ranking_model_key);
-            raise;
-        end;
-        begin
             select PD
               into v_PD
               from DWH.PD_CORP_EC
              where VALID_TO_DTTM = GC_EOW and p_fair_value.SNAPSHOT_DT between START_DT and END_DT
-               and RATING_MODEL_KEY = v_rating_model_key and RAT_ON_DATE = p_fair_value.rating_nam;
+               and RATING_MODEL_KEY = p_fair_value.rating_model_key and RAT_ON_DATE = p_fair_value.rating_nam;
         exception when no_data_found then
             dm.u_log(GC_PACKAGE,'calc_pay_economic_capital','no_data_found at DWH.PD_CORP_EC for RATING_MODEL_KEY='
-                                                            ||v_rating_model_key||' and RAT_ON_DATE='||p_fair_value.rating_nam);
+                                                            ||p_fair_value.rating_model_key||' and RAT_ON_DATE='||p_fair_value.rating_nam);
             raise;
         end;
 
-        v_correction_R := case when p_fair_value.ranking_model_key = 1
+        v_correction_R := case when p_fair_value.rating_model_key = 3 -- Крупные (корпоративные)
                                  or p_fair_value.proceed_amt = 0
                                  or p_fair_value.proceed_amt > 2000
                                  or v_PD = 1 -- 100%
@@ -610,7 +592,7 @@ create or replace package body DM.PKG_FV_CALC as
             v_fair_value.client_name := p_client_name;
             v_fair_value.term_amt := p_term_amt;
             v_fair_value.total_sum := p_total_sum;
-            v_fair_value.ranking_model_key := p_ranking_model_key;
+            v_fair_value.rating_model_key := p_rating_model_key;
             v_fair_value.rating_nam := p_rating_nam;
             v_fair_value.leasing_subject_type_cd := p_leasing_subject_type_cd;
             v_fair_value.currency_letter_cd := p_currency_letter_cd;
