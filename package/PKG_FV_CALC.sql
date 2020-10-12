@@ -1,26 +1,26 @@
 create or replace package DM.PKG_FV_CALC as
 
  procedure main(
-                p_snapshot_dt date default trunc(sysdate) -- Р”Р°С‚Р° СЂР°СЃС‡РµС‚Р° (РЅР° РєР°РєСѓСЋ РґР°С‚Сѓ Р·Р°РїСѓСЃРєР°РµС‚СЃСЏ СЂР°СЃС‡РµС‚)
-                ,p_client_name varchar2 --Р›РёР·РёРЅРіРѕРїРѕР»СѓС‡Р°С‚РµР»СЊ
-                ,p_term_amt number -- РЎСЂРѕРє СЃРґРµР»РєРё
-                ,p_total_sum number -- РЎСѓРјРјР° СЃРґРµР»РєРё
-                ,p_rating_model_key number -- РљР»СЋС‡ СЂРµР№С‚РёРЅРіРѕРІРѕР№ РјРѕРґРµР»Рё
-                ,p_rating_nam varchar2 -- Р РµР№С‚РёРЅРі
-                ,p_leasing_subject_type_cd varchar2 -- РўРёРїР° Р»РёР·РёРЅРіРѕРІРѕРіРѕ РёРјСѓС‰РµСЃС‚РІР°
-                ,p_currency_letter_cd varchar2 -- Р’Р°Р»СЋС‚Р° С‚РёРїР° СЃС‚Р°РІРєРё
-                ,p_fixfloat varchar2 -- РџСЂРёР·РЅР°Рє С„РёРєСЃРёСЂРѕРІР°РЅРЅРѕР№ РїР»Р°РІР°СЋС‰РµР№ СЃС‚Р°РІРєРё
-                ,p_contracts_terms_key number -- РљР»СЋС‡ СѓСЃР»РѕРІРёР№ РєРѕРЅС‚СЂР°РєС‚Р°
-                ,p_ftp_calculation_method_key number -- РљР»СЋС‡Рё РњРµС‚РѕРґРёРєРё СЂР°СЃС‡РµС‚Р° СЃС‚Р°РІРєРё FTP
-                ,p_schedule_file_name varchar2 -- Р“СЂР°С„РёРє РїРѕРіР°С€РµРЅРёСЏ РћР”
-                ,p_early_spread_type_key number -- РљР»СЋС‡ РІРёРґР° СЃРїСЂРµРґР° РЅР° РґРѕСЃСЂРѕС‡РЅРѕРµ РїРѕРіР°С€РµРЅРёРµ
-                ,p_moratory_term_amt number -- РЎСЂРѕРє РјРѕСЂР°С‚РѕСЂРёСЏ
-                ,p_fix_period_amt number -- РџРµСЂРёРѕРґ С„РёРєСЃР°С†РёРё
-                ,p_use_period_amt number -- РџРµСЂРёРѕРґ РёСЃРїРѕР»СЊР·РѕРІР°РЅРёСЏ
-                ,p_ind_cncl_term_amt number -- РЎСЂРѕРє РѕС‚РјРµРЅС‹ С‚РµСЃС‚РёСЂРѕРІР°РЅРёСЏ
-                ,p_balance_debt_amt number -- Р‘Р°Р»Р°РЅСЃРѕРІР°СЏ РІРµР»РёС‡РёРЅР° Р·Р°РґРѕР»Р¶РµРЅРЅРѕСЃС‚Рё, СЂСѓР±.
-                ,p_market_value_amt number --  Р С‹РЅРѕС‡РЅР°СЏ СЃС‚РѕРёРјРѕСЃС‚СЊ РёРјСѓС‰РµСЃС‚РІР°
-                ,p_proceed_amt number -- Р’С‹СЂСѓС‡РєР°, РјР»РЅ. RUB Р±РµР· РќР”РЎ Р·Р° РїРѕСЃР»РµРґРЅРёР№ РєР°Р»РµРЅРґР°СЂРЅС‹Р№ РіРѕРґ
+                p_snapshot_dt date default trunc(sysdate) -- Дата расчета (на какую дату запускается расчет)
+                ,p_client_name varchar2 --Лизингополучатель
+                ,p_term_amt number -- Срок сделки
+                ,p_total_sum number -- Сумма сделки
+                ,p_rating_model_key number -- Ключ рейтинговой модели
+                ,p_rating_nam varchar2 -- Рейтинг
+                ,p_leasing_subject_type_cd varchar2 -- Типа лизингового имущества
+                ,p_currency_letter_cd varchar2 -- Валюта типа ставки
+                ,p_fixfloat varchar2 -- Признак фиксированной плавающей ставки
+                ,p_contracts_terms_key number -- Ключ условий контракта
+                ,p_ftp_calculation_method_key number -- Ключи Методики расчета ставки FTP
+                ,p_schedule_file_name varchar2 -- График погашения ОД
+                ,p_early_spread_type_key number -- Ключ вида спреда на досрочное погашение
+                ,p_moratory_term_amt number -- Срок моратория
+                ,p_fix_period_amt number -- Период фиксации
+                ,p_use_period_amt number -- Период использования
+                ,p_ind_cncl_term_amt number -- Срок отмены тестирования
+                ,p_balance_debt_amt number -- Балансовая величина задолженности, руб.
+                ,p_market_value_amt number --  Рыночная стоимость имущества
+                ,p_proceed_amt number -- Выручка, млн. RUB без НДС за последний календарный год
     );
 
 end;
@@ -32,7 +32,7 @@ create or replace package body DM.PKG_FV_CALC as
 
     GC_EXP_50 constant number := exp(-50);
 
-    gv_exc_flag char(1) := 'Y'; --РСЃРєР»СЋС‡РµРЅРёРµ РЅРµ РѕР±СЂР°Р±РѕС‚Р°РЅРѕ?
+    gv_exc_flag char(1) := 'Y'; --Исключение не обработано?
 
     subtype t_fair_value is DM.FAIR_VALUE%rowtype;
     
@@ -114,7 +114,7 @@ create or replace package body DM.PKG_FV_CALC as
         return CALCULATION_ID into p_fair_value.calculation_id;
     exception
         when others then
-            dm.u_log(GC_PACKAGE, 'insert_fair/error', 'РћС€РёР±РєР° РїСЂРё СЃРѕР·РґР°РЅРёРё DM.FAIR_VALUE '||sqlerrm);
+            dm.u_log(GC_PACKAGE, 'insert_fair/error', 'Ошибка при создании DM.FAIR_VALUE '||sqlerrm);
             gv_exc_flag := 'N';
             raise;
     end;
@@ -140,7 +140,7 @@ create or replace package body DM.PKG_FV_CALC as
     exception
         when others then
             dm.u_log(GC_PACKAGE, 'update_fair_result/error',
-                     'РћС€РёР±РєР° РїСЂРё СЃРѕС…СЂР°РЅРµРЅРёРё СЂРµР·СѓР»СЊС‚Р°С‚РѕРІ DM.FAIR_VALUE CALCULATION_ID='||p_fair_value.calculation_id||' '||sqlerrm);
+                     'Ошибка при сохранении результатов DM.FAIR_VALUE CALCULATION_ID='||p_fair_value.calculation_id||' '||sqlerrm);
             gv_exc_flag := 'N';
             raise;
     end;
@@ -159,7 +159,7 @@ create or replace package body DM.PKG_FV_CALC as
     exception
         when others then
             dm.u_log(GC_PACKAGE,'get_rate_type/error',
-                     'РћС€РёР±РєР° РїСЂРё РїРѕР»СѓС‡РµРЅРёРё DWH.CURRATE_TYPES РїРѕ CURRENCY_LETTER_CD='''||p_currency_letter_cd||''', FIXFLOAT='''||p_fixfloat||''' '
+                     'Ошибка при получении DWH.CURRATE_TYPES по CURRENCY_LETTER_CD='''||p_currency_letter_cd||''', FIXFLOAT='''||p_fixfloat||''' '
                      ||sqlerrm);
             gv_exc_flag := 'N';
             raise;
@@ -198,7 +198,7 @@ create or replace package body DM.PKG_FV_CALC as
     exception
         when others then
             dm.u_log(GC_PACKAGE,'get_treasury_spread/error',
-                     'РћС€РёР±РєР° РїСЂРё РїРѕР»СѓС‡РµРЅРёРё DWH.TREASURY_SPREAD РґР»СЏ TREASURY_SPREAD_TYPE='''||p_treasury_spread_type||''' '
+                     'Ошибка при получении DWH.TREASURY_SPREAD для TREASURY_SPREAD_TYPE='''||p_treasury_spread_type||''' '
                      ||sqlerrm);
             gv_exc_flag := 'N';
             raise;
@@ -221,7 +221,7 @@ create or replace package body DM.PKG_FV_CALC as
     exception
         when others then
             dm.u_log(GC_PACKAGE,'get_treasury_spread/error',
-                     'РћС€РёР±РєР° РїСЂРё РїРѕР»СѓС‡РµРЅРёРё DWH.TREASURY_SPREAD РґР»СЏ TREASURY_SPREAD_TYPE='''||p_treasury_spread_type||''' '
+                     'Ошибка при получении DWH.TREASURY_SPREAD для TREASURY_SPREAD_TYPE='''||p_treasury_spread_type||''' '
                          ||sqlerrm);
             gv_exc_flag := 'N';
             raise;
@@ -244,70 +244,70 @@ create or replace package body DM.PKG_FV_CALC as
         when others then
             if cur_max_term%isopen then close cur_max_term; end if;
             dm.u_log(GC_PACKAGE,'get_over_fv_max_term/error',
-                     'РћС€РёР±РєР° РїСЂРё РїРѕР»СѓС‡РµРЅРёРё DWH.FV_MAX_TERM РїРѕ TERM_AMT='||p_fair_value.term_amt
+                     'Ошибка при получении DWH.FV_MAX_TERM по TERM_AMT='||p_fair_value.term_amt
                          ||case when not p_rate_type_cd is null then ' RATE_TYPE_CD='||p_rate_type_cd end||' '||sqlerrm);
             gv_exc_flag := 'N';
             raise;
     end;
 
-    -- Р Р°СЃС‡РµС‚ РєСЂРёРІРѕР№ FTP (РўСЂР°РЅСЃС„РµСЂС‚РЅРѕР№ СЃС‚Р°РІРєРё)
+    -- Расчет кривой FTP (Трансфертной ставки)
     procedure calc_ftp(p_fair_value in out nocopy t_fair_value) is
     begin
         dbms_application_info.set_action(action_name => 'calc_ftp');
-        dm.u_log(GC_PACKAGE,'calc_ftp/BEGIN','Р Р°СЃС‡РµС‚ РєСЂРёРІРѕР№ FTP');
+        dm.u_log(GC_PACKAGE,'calc_ftp/BEGIN','Расчет кривой FTP');
 
-        --v_fv_max_term get_max_term РўСЂР°РЅСЃС„РµСЂС‚РЅР°СЏ СЃС‚Р°РІРєР°  or    РўСЂР°РЅСЃС„РµСЂС‚РЅР°СЏ СЃС‚Р°РІРєР° (fix);
+        --v_fv_max_term get_max_term Трансфертная ставка  or    Трансфертная ставка (fix);
         --get CURRRATES;
 
         p_fair_value.ftp_v := 0.123456789;
 
-        dm.u_log(GC_PACKAGE,'calc_ftp/END','Р Р°СЃС‡РµС‚ РєСЂРёРІРѕР№ FTP');
+        dm.u_log(GC_PACKAGE,'calc_ftp/END','Расчет кривой FTP');
     exception
-        when others then dm.u_log(GC_PACKAGE,'calc_ftp/error','РћС€РёР±РєР° РІ "Р Р°СЃС‡С‘С‚ РєСЂРёРІРѕР№ FTP" '||sqlerrm); gv_exc_flag := 'N'; raise;
+        when others then dm.u_log(GC_PACKAGE,'calc_ftp/error','Ошибка в "Расчёт кривой FTP" '||sqlerrm); gv_exc_flag := 'N'; raise;
     end;
 
-    -- РљРѕРјРїРµРЅСЃРёСЂСѓСЋС‰РёР№ СЃРїСЂРµРґ Рё РєРѕРјРёСЃСЃРёСЏ Р·Р° РґРѕСЃСЂРѕС‡РЅРѕРµ РїРѕРіР°С€РµРЅРёРµ
-    procedure calc_treasury_spread_advanced_repayment(p_fair_value in out nocopy t_fair_value) is
+    -- Компенсирующий спред и комиссия за досрочное погашение
+    procedure c_t_s_advanced_repayment(p_fair_value in out nocopy t_fair_value) is
     begin
-        dbms_application_info.set_action(action_name => 'calc_treasury_spread_advanced_repayment');
-        dm.u_log(GC_PACKAGE,'calc_treasury_spread_advanced_repayment/BEGIN','РљРѕРјРїРµРЅСЃРёСЂСѓСЋС‰РёР№ СЃРїСЂРµРґ Рё РєРѕРјРёСЃСЃРёСЏ Р·Р° РґРѕСЃСЂРѕС‡РЅРѕРµ РїРѕРіР°С€РµРЅРёРµ');
-        dm.u_log(GC_PACKAGE,'calc_treasury_spread_advanced_repayment/END','РљРѕРјРїРµРЅСЃРёСЂСѓСЋС‰РёР№ СЃРїСЂРµРґ Рё РєРѕРјРёСЃСЃРёСЏ Р·Р° РґРѕСЃСЂРѕС‡РЅРѕРµ РїРѕРіР°С€РµРЅРёРµ');
+        dbms_application_info.set_action(action_name => 'c_t_s_advanced_repayment');
+        dm.u_log(GC_PACKAGE,'c_t_s_advanced_repayment/BEGIN','Компенсирующий спред и комиссия за досрочное погашение');
+        dm.u_log(GC_PACKAGE,'c_t_s_advanced_repayment/END','Компенсирующий спред и комиссия за досрочное погашение');
     exception
-        when others then dm.u_log(GC_PACKAGE,'calc_treasury_spread_advanced_repayment/error','РћС€РёР±РєР° РІ "РљРѕРјРїРµРЅСЃРёСЂСѓСЋС‰РёР№ СЃРїСЂРµРґ Рё РєРѕРјРёСЃСЃРёСЏ Р·Р° РґРѕСЃСЂРѕС‡РЅРѕРµ РїРѕРіР°С€РµРЅРёРµ" '||sqlerrm); gv_exc_flag := 'N'; raise;
+        when others then dm.u_log(GC_PACKAGE,'c_t_s_advanced_repayment/error','Ошибка в "Компенсирующий спред и комиссия за досрочное погашение" '||sqlerrm); gv_exc_flag := 'N'; raise;
     end;
 
-    -- Р Р°СЃС‡РµС‚ РІР°СЂРёР°РЅС‚Р° РЎРїСЂРµРґ+РєРѕРјРёСЃСЃРёСЏ
-    procedure calc_treasury_spread_commission(p_fair_value in out nocopy t_fair_value) is
+    -- Расчет варианта Спред+комиссия
+    procedure c_t_s_commission(p_fair_value in out nocopy t_fair_value) is
     begin
-        dbms_application_info.set_action(action_name => 'calc_treasury_spread_commission');
-        dm.u_log(GC_PACKAGE,'calc_treasury_spread_commission/BEGIN','Р Р°СЃС‡РµС‚ РІР°СЂРёР°РЅС‚Р° РЎРїСЂРµРґ+РєРѕРјРёСЃСЃРёСЏ');
-        dm.u_log(GC_PACKAGE,'calc_treasury_spread_commission/END','Р Р°СЃС‡РµС‚ РІР°СЂРёР°РЅС‚Р° РЎРїСЂРµРґ+РєРѕРјРёСЃСЃРёСЏ');
+        dbms_application_info.set_action(action_name => 'c_t_s_commission');
+        dm.u_log(GC_PACKAGE,'c_t_s_commission/BEGIN','Расчет варианта Спред+комиссия');
+        dm.u_log(GC_PACKAGE,'c_t_s_commission/END','Расчет варианта Спред+комиссия');
     exception
-        when others then dm.u_log(GC_PACKAGE,'calc_treasury_spread_commission/error','РћС€РёР±РєР° РІ "Р Р°СЃС‡РµС‚ РІР°СЂРёР°РЅС‚Р° РЎРїСЂРµРґ+РєРѕРјРёСЃСЃРёСЏ" '||sqlerrm); gv_exc_flag := 'N'; raise;
+        when others then dm.u_log(GC_PACKAGE,'c_t_s_commission/error','Ошибка в "Расчет варианта Спред+комиссия" '||sqlerrm); gv_exc_flag := 'N'; raise;
     end;
 
-    -- Р Р°СЃС‡РµС‚ РІР°СЂРёР°РЅС‚Р° РњРѕСЂР°С‚РѕСЂРёР№+СЃРїСЂРµРґ
-    procedure calc_treasury_spread_moratorium(p_fair_value in out nocopy t_fair_value) is
+    -- Расчет варианта Мораторий+спред
+    procedure c_t_s_moratorium(p_fair_value in out nocopy t_fair_value) is
     begin
-        dbms_application_info.set_action(action_name => 'calc_treasury_spread_moratorium');
-        dm.u_log(GC_PACKAGE,'calc_treasury_spread_moratorium/BEGIN','Р Р°СЃС‡РµС‚ РІР°СЂРёР°РЅС‚Р° РњРѕСЂР°С‚РѕСЂРёР№+СЃРїСЂРµРґ');
-        dm.u_log(GC_PACKAGE,'calc_treasury_spread_moratorium/END','Р Р°СЃС‡РµС‚ РІР°СЂРёР°РЅС‚Р° РњРѕСЂР°С‚РѕСЂРёР№+СЃРїСЂРµРґ');
+        dbms_application_info.set_action(action_name => 'c_t_s_moratorium');
+        dm.u_log(GC_PACKAGE,'c_t_s_moratorium/BEGIN','Расчет варианта Мораторий+спред');
+        dm.u_log(GC_PACKAGE,'c_t_s_moratorium/END','Расчет варианта Мораторий+спред');
     exception
-        when others then dm.u_log(GC_PACKAGE,'calc_treasury_spread_moratorium/error','РћС€РёР±РєР° РІ "Р Р°СЃС‡РµС‚ РІР°СЂРёР°РЅС‚Р° РњРѕСЂР°С‚РѕСЂРёР№+СЃРїСЂРµРґ" '||sqlerrm); gv_exc_flag := 'N'; raise;
+        when others then dm.u_log(GC_PACKAGE,'c_t_s_moratorium/error','Ошибка в "Расчет варианта Мораторий+спред" '||sqlerrm); gv_exc_flag := 'N'; raise;
     end;
 
-    -- РљРѕРјРёСЃСЃРёСЏ Р·Р° РѕР±СЏР·Р°С‚РµР»СЊСЃС‚РІРѕ
-    procedure calc_treasury_spread_commission_liability(p_fair_value in out nocopy t_fair_value) is
+    -- Комиссия за обязательство
+    procedure c_t_s_commission_liability(p_fair_value in out nocopy t_fair_value) is
     begin
-        dbms_application_info.set_action(action_name => 'calc_treasury_spread_commission_liability');
-        dm.u_log(GC_PACKAGE,'calc_treasury_spread_commission_liability/BEGIN','РљРѕРјРёСЃСЃРёСЏ Р·Р° РѕР±СЏР·Р°С‚РµР»СЊСЃС‚РІРѕ');
-        dm.u_log(GC_PACKAGE,'calc_treasury_spread_commission_liability/END','РљРѕРјРёСЃСЃРёСЏ Р·Р° РѕР±СЏР·Р°С‚РµР»СЊСЃС‚РІРѕ');
+        dbms_application_info.set_action(action_name => 'c_t_s_commission_liability');
+        dm.u_log(GC_PACKAGE,'c_t_s_commission_liability/BEGIN','Комиссия за обязательство');
+        dm.u_log(GC_PACKAGE,'c_t_s_commission_liability/END','Комиссия за обязательство');
     exception
-        when others then dm.u_log(GC_PACKAGE,'calc_ftp/error','РћС€РёР±РєР° РІ "РљРѕРјРёСЃСЃРёСЏ Р·Р° РѕР±СЏР·Р°С‚РµР»СЊСЃС‚РІРѕ" '||sqlerrm); gv_exc_flag := 'N'; raise;
+        when others then dm.u_log(GC_PACKAGE,'calc_ftp/error','Ошибка в "Комиссия за обязательство" '||sqlerrm); gv_exc_flag := 'N'; raise;
     end;
 
-    -- РљРѕРјРїРµРЅСЃРёСЂСѓСЋС‰РёР№ СЃРїСЂРµРґ Р·Р° С„РёРєСЃР°С†РёСЋ СЃС‚Р°РІРєРё
-    procedure calc_treasury_spread_fixation_rate(p_fair_value in out nocopy t_fair_value) is
+    -- Компенсирующий спред за фиксацию ставки
+    procedure c_t_s_fixation_rate(p_fair_value in out nocopy t_fair_value) is
         v_fv_max_term number;
         procedure i_do_calc is
         begin
@@ -316,46 +316,46 @@ create or replace package body DM.PKG_FV_CALC as
             end if;
         end;
     begin
-        dbms_application_info.set_action(action_name => 'calc_treasury_spread_fixation_rate');
-        dm.u_log(GC_PACKAGE,'calc_treasury_spread_fixation_rate/BEGIN','РљРѕРјРїРµРЅСЃРёСЂСѓСЋС‰РёР№ СЃРїСЂРµРґ Р·Р° С„РёРєСЃР°С†РёСЋ СЃС‚Р°РІРєРё');
+        dbms_application_info.set_action(action_name => 'c_t_s_fixation_rate');
+        dm.u_log(GC_PACKAGE,'c_t_s_fixation_rate/BEGIN','Компенсирующий спред за фиксацию ставки');
         i_do_calc();
-        dm.u_log(GC_PACKAGE,'calc_treasury_spread_fixation_rate/END','РљРѕРјРїРµРЅСЃРёСЂСѓСЋС‰РёР№ СЃРїСЂРµРґ Р·Р° С„РёРєСЃР°С†РёСЋ СЃС‚Р°РІРєРё');
+        dm.u_log(GC_PACKAGE,'c_t_s_fixation_rate/END','Компенсирующий спред за фиксацию ставки');
     exception
-        when others then dm.u_log(GC_PACKAGE,'calc_treasury_spread_fixation_rate/error','РћС€РёР±РєР° РІ "РљРѕРјРїРµРЅСЃРёСЂСѓСЋС‰РёР№ СЃРїСЂРµРґ Р·Р° С„РёРєСЃР°С†РёСЋ СЃС‚Р°РІРєРё" '||sqlerrm); gv_exc_flag := 'N'; raise;
+        when others then dm.u_log(GC_PACKAGE,'c_t_s_fixation_rate/error','Ошибка в "Компенсирующий спред за фиксацию ставки" '||sqlerrm); gv_exc_flag := 'N'; raise;
     end;
 
-    -- РљРѕРјРїРµРЅСЃРёСЂСѓСЋС‰РёР№ СЃРїСЂРµРґ Р·Р° РѕС‚РјРµРЅСѓ/РѕС‚СЃСѓС‚СЃС‚РІРёРµ РёРЅРґРёРєР°С‚РѕСЂРѕРІ
-    procedure calc_treasury_spread_compensate_indicator(p_fair_value in out nocopy t_fair_value) is
+    -- Компенсирующий спред за отмену/отсутствие индикаторов
+    procedure c_t_s_compensate_indicator(p_fair_value in out nocopy t_fair_value) is
         v_fv_max_term number;
         procedure i_do_calc is
         begin
             /*
-            if (p_fair_value.federal_low_type_key = 1 -- РќРµ РІ СЂР°РјРєР°С… Р¤Р—
-                and p_fair_value.formulation_ind_cncl_key != 3) --Р¤РѕСЂРјСѓР»РёСЂРѕРІРєР° 3
+            if (p_fair_value.federal_low_type_key = 1 -- Не в рамках ФЗ
+                and p_fair_value.formulation_ind_cncl_key != 3) --Формулировка 3
                 or
                (p_fair_value.federal_low_type_key != 1
                 and p_fair_value.ind_cncl_term_amt is null) then
                 p_fair_value.cncl_sread_v := 0;
                 return;
             end if;
-            v_fv_max_term := get_over_fv_max_term(p_fair_value, 'CNCL_SREAD'); -- РЎРїСЂРµРґ Р·Р° РѕС‚РјРµРЅСѓ РёРЅРґРёРєР°С‚РѕСЂРѕРІ
+            v_fv_max_term := get_over_fv_max_term(p_fair_value, 'CNCL_SREAD'); -- Спред за отмену индикаторов
             if not v_fv_max_term is null then
                 p_fair_value.cncl_sread_v := v_fv_max_term;
                 return;
             end if;
 
-            if p_fair_value.federal_low_type_key in (2,3) -- 44-Р¤Р—  223-Р¤Р—
-               and p_fair_value.formulation_ind_cncl_key = 3 then -- Р¤РѕСЂРјСѓР»РёСЂРѕРІРєР° 3
+            if p_fair_value.federal_low_type_key in (2,3) -- 44-ФЗ  223-ФЗ
+               and p_fair_value.formulation_ind_cncl_key = 3 then -- Формулировка 3
                 p_fair_value.full_cncl_sread_v := get_treasury_spread(p_fair_value, 'FULL_CNCL_INDC');
             end if;
 
-            if p_fair_value.federal_low_type_key = 1 -- РќРµ РІ СЂР°РјРєР°С… Р¤Р—
-                and p_fair_value.formulation_ind_cncl_key = 3 then -- Р¤РѕСЂРјСѓР»РёСЂРѕРІРєР° 3
+            if p_fair_value.federal_low_type_key = 1 -- Не в рамках ФЗ
+                and p_fair_value.formulation_ind_cncl_key = 3 then -- Формулировка 3
                 p_fair_value.term_cncl_sread_v := get_treasury_spread(p_fair_value, 'TERM_CNCL_INDC', true);
             end if;
 
-            if p_fair_value.federal_low_type_key != 3 -- Р¤РѕСЂРјСѓР»РёСЂРѕРІРєР° 3
-               and p_fair_value.formulation_ind_cncl_key in (1, 4) then -- Р¤РѕСЂРјСѓР»РёСЂРѕРІРєР° 1, Р¤РѕСЂРјСѓР»РёСЂРѕРІРєР° 4
+            if p_fair_value.federal_low_type_key != 3 -- Формулировка 3
+               and p_fair_value.formulation_ind_cncl_key in (1, 4) then -- Формулировка 1, Формулировка 4
                 p_fair_value.one_cncl_sread_v := get_treasury_spread(p_fair_value, 'ONE_CNCL_INDC');
                 p_fair_value.barrier := get_treasury_spread_by_currency(p_fair_value, 'BARRIER');
             end if;
@@ -364,50 +364,50 @@ create or replace package body DM.PKG_FV_CALC as
                                          + nvl(p_fair_value.term_cncl_sread_v, 0) + nvl(p_fair_value.one_cncl_sread_v, 0);
         end;
     begin
-        dbms_application_info.set_action(action_name => 'calc_treasury_spread_compensate_indicator');
-        dm.u_log(GC_PACKAGE,'calc_treasury_spread_compensate_indicator/BEGIN','РљРѕРјРїРµРЅСЃРёСЂСѓСЋС‰РёР№ СЃРїСЂРµРґ Р·Р° РѕС‚РјРµРЅСѓ/РѕС‚СЃСѓС‚СЃС‚РІРёРµ РёРЅРґРёРєР°С‚РѕСЂРѕРІ');
+        dbms_application_info.set_action(action_name => 'c_t_s_compensate_indicator');
+        dm.u_log(GC_PACKAGE,'c_t_s_compensate_indicator/BEGIN','Компенсирующий спред за отмену/отсутствие индикаторов');
         i_do_calc;
-        dm.u_log(GC_PACKAGE,'calc_treasury_spread_compensate_indicator/END','РљРѕРјРїРµРЅСЃРёСЂСѓСЋС‰РёР№ СЃРїСЂРµРґ Р·Р° РѕС‚РјРµРЅСѓ/РѕС‚СЃСѓС‚СЃС‚РІРёРµ РёРЅРґРёРєР°С‚РѕСЂРѕРІ');
+        dm.u_log(GC_PACKAGE,'c_t_s_compensate_indicator/END','Компенсирующий спред за отмену/отсутствие индикаторов');
     exception
-        when others then dm.u_log(GC_PACKAGE,'calc_treasury_spread_compensate_indicator/error','РћС€РёР±РєР° РІ "РљРѕРјРїРµРЅСЃРёСЂСѓСЋС‰РёР№ СЃРїСЂРµРґ Р·Р° РѕС‚РјРµРЅСѓ/РѕС‚СЃСѓС‚СЃС‚РІРёРµ РёРЅРґРёРєР°С‚РѕСЂРѕРІ" '||sqlerrm); gv_exc_flag := 'N'; raise;
+        when others then dm.u_log(GC_PACKAGE,'c_t_s_compensate_indicator/error','Ошибка в "Компенсирующий спред за отмену/отсутствие индикаторов" '||sqlerrm); gv_exc_flag := 'N'; raise;
     end;
 
-    -- РљР°Р·РЅР°С‡РµР№СЃРєРёРµ СЃРїСЂРµРґС‹ (РЅР°РґР±Р°РІРєРё Р·Р° РїСЂР°РІРѕ РґРѕСЃСЂРѕС‡РЅРѕРіРѕ РїРѕРіР°С€РµРЅРёСЏ, РѕС‚РјРµРЅСѓ РёРЅРґРёРєР°С‚РѕСЂРѕРІ Рё С„РёРєСЃР°С†РёСЋ СЃС‚Р°РІРєРё РЅР° РїРµСЂРёРѕРґ РІС‹Р±РѕСЂРєРё)
+    -- Казначейские спреды (надбавки за право досрочного погашения, отмену индикаторов и фиксацию ставки на период выборки)
     procedure calc_treasury_spread(p_fair_value in out nocopy t_fair_value) is
     begin
         dbms_application_info.set_action(action_name => 'calc_treasury_spread');
-        dm.u_log(GC_PACKAGE,'calc_treasury_spread/BEGIN','РљР°Р·РЅР°С‡РµР№СЃРєРёРµ СЃРїСЂРµРґС‹');
+        dm.u_log(GC_PACKAGE,'calc_treasury_spread/BEGIN','Казначейские спреды');
 
-        -- РљРѕРјРїРµРЅСЃРёСЂСѓСЋС‰РёР№ СЃРїСЂРµРґ Рё РєРѕРјРёСЃСЃРёСЏ Р·Р° РґРѕСЃСЂРѕС‡РЅРѕРµ РїРѕРіР°С€РµРЅРёРµ
-        calc_treasury_spread_advanced_repayment(p_fair_value);
+        -- Компенсирующий спред и комиссия за досрочное погашение
+        c_t_s_advanced_repayment(p_fair_value);
 
-        -- Р Р°СЃС‡РµС‚ РІР°СЂРёР°РЅС‚Р° РЎРїСЂРµРґ+РєРѕРјРёСЃСЃРёСЏ
-        calc_treasury_spread_commission(p_fair_value);
+        -- Расчет варианта Спред+комиссия
+        c_t_s_commission(p_fair_value);
 
-        -- Р Р°СЃС‡РµС‚ РІР°СЂРёР°РЅС‚Р° РњРѕСЂР°С‚РѕСЂРёР№+СЃРїСЂРµРґ
-        calc_treasury_spread_moratorium(p_fair_value);
+        -- Расчет варианта Мораторий+спред
+        c_t_s_moratorium(p_fair_value);
 
-        -- РљРѕРјРёСЃСЃРёСЏ Р·Р° РѕР±СЏР·Р°С‚РµР»СЊСЃС‚РІРѕ
-        calc_treasury_spread_commission_liability(p_fair_value);
+        -- Комиссия за обязательство
+        c_t_s_commission_liability(p_fair_value);
 
-        -- РљРѕРјРїРµРЅСЃРёСЂСѓСЋС‰РёР№ СЃРїСЂРµРґ Р·Р° С„РёРєСЃР°С†РёСЋ СЃС‚Р°РІРєРё
-        calc_treasury_spread_fixation_rate(p_fair_value);
+        -- Компенсирующий спред за фиксацию ставки
+        c_t_s_fixation_rate(p_fair_value);
 
-        -- РљРѕРјРїРµРЅСЃРёСЂСѓСЋС‰РёР№ СЃРїСЂРµРґ Р·Р° РѕС‚РјРµРЅСѓ/РѕС‚СЃСѓС‚СЃС‚РІРёРµ РёРЅРґРёРєР°С‚РѕСЂРѕРІ
-        calc_treasury_spread_compensate_indicator(p_fair_value);
+        -- Компенсирующий спред за отмену/отсутствие индикаторов
+        c_t_s_compensate_indicator(p_fair_value);
 
-        dm.u_log(GC_PACKAGE,'calc_treasury_spread/END','РљР°Р·РЅР°С‡РµР№СЃРєРёРµ СЃРїСЂРµРґС‹');
+        dm.u_log(GC_PACKAGE,'calc_treasury_spread/END','Казначейские спреды');
     exception
-        when others then dm.u_log(GC_PACKAGE,'calc_treasury_spread/error','РћС€РёР±РєР° РІ СЂР°СЃС‡С‘С‚Рµ "РљР°Р·РЅР°С‡РµР№СЃРєРёРµ СЃРїСЂРµРґС‹" '||sqlerrm); gv_exc_flag := 'N'; raise;
+        when others then dm.u_log(GC_PACKAGE,'calc_treasury_spread/error','Ошибка в расчёте "Казначейские спреды" '||sqlerrm); gv_exc_flag := 'N'; raise;
     end;
 
-    -- РџСЂРµРјРёСЏ Р·Р° РєСЂРµРґРёС‚РЅС‹Р№ СЂРёСЃРє (РЅР°РґР±Р°РІРєР° РЅР° РїРѕРєСЂС‹С‚РёРµ СЂРёСЃРєР° РґРµС„РѕР»С‚Р° РєР»РёРµРЅС‚Р°)
+    -- Премия за кредитный риск (надбавка на покрытие риска дефолта клиента)
     procedure calc_credit_risk_premium(p_fair_value in out nocopy t_fair_value) is
         v_lgd number;
         v_PD1_MACRO number;
     begin
         dbms_application_info.set_action(action_name => 'calc_credit_risk_premium');
-        dm.u_log(GC_PACKAGE,'calc_credit_risk_premium/BEGIN','РџСЂРµРјРёСЏ Р·Р° РєСЂРµРґРёС‚РЅС‹Р№ СЂРёСЃРє');
+        dm.u_log(GC_PACKAGE,'calc_credit_risk_premium/BEGIN','Премия за кредитный риск');
 
         begin
             select LGD
@@ -433,12 +433,12 @@ create or replace package body DM.PKG_FV_CALC as
 
         p_fair_value.PKR_V := v_pd1_macro + v_lgd;
 
-        dm.u_log(GC_PACKAGE,'calc_credit_risk_premium/END','РџСЂРµРјРёСЏ Р·Р° РєСЂРµРґРёС‚РЅС‹Р№ СЂРёСЃРє');
+        dm.u_log(GC_PACKAGE,'calc_credit_risk_premium/END','Премия за кредитный риск');
     exception
-        when others then dm.u_log(GC_PACKAGE,'calc_credit_risk_premium/error','РћС€РёР±РєР° РІ СЂР°СЃС‡С‘С‚Рµ "РџСЂРµРјРёСЏ Р·Р° РєСЂРµРґРёС‚РЅС‹Р№ СЂРёСЃРє" '||sqlerrm); gv_exc_flag := 'N'; raise;
+        when others then dm.u_log(GC_PACKAGE,'calc_credit_risk_premium/error','Ошибка в расчёте "Премия за кредитный риск" '||sqlerrm); gv_exc_flag := 'N'; raise;
     end;
 
-    -- РџР»Р°С‚Р° Р·Р° СЌРєРѕРЅРѕРјРёС‡РµСЃРєРёР№ РєР°РїРёС‚Р°Р» (РЅР°РґР±Р°РІРєР° РЅР° РїРѕРєСЂС‹С‚РёРµ РґСЂСѓРіРёС… РѕРїРµСЂР°С†РёРѕРЅРЅС‹С… Рё Р±РёР·РЅРµСЃ-СЂРёСЃРєРѕРІ)
+    -- Плата за экономический капитал (надбавка на покрытие других операционных и бизнес-рисков)
     procedure calc_pay_economic_capital(p_fair_value in out nocopy t_fair_value) is
         v_C_E number;
         v_E1 number;
@@ -459,7 +459,7 @@ create or replace package body DM.PKG_FV_CALC as
         v_roe number;
     begin
         dbms_application_info.set_action(action_name => 'calc_pay_economic_capital');
-        dm.u_log(GC_PACKAGE,'calc_pay_economic_capital/BEGIN','РџР»Р°С‚Р° Р·Р° СЌРєРѕРЅРѕРјРёС‡РµСЃРєРёР№ РєР°РїРёС‚Р°Р»');
+        dm.u_log(GC_PACKAGE,'calc_pay_economic_capital/BEGIN','Плата за экономический капитал');
 
         v_C_E := case p_fair_value.balance_debt_amt when 0 then 0 else p_fair_value.market_value_amt / p_fair_value.balance_debt_amt end;
         v_E1 := case when v_C_E < .3 then 0
@@ -481,7 +481,7 @@ create or replace package body DM.PKG_FV_CALC as
             raise;
         end;
 
-        v_correction_R := case when p_fair_value.rating_model_key = 3 -- РљСЂСѓРїРЅС‹Рµ (РєРѕСЂРїРѕСЂР°С‚РёРІРЅС‹Рµ)
+        v_correction_R := case when p_fair_value.rating_model_key = 3 -- Крупные (корпоративные)
                                  or p_fair_value.proceed_amt = 0
                                  or p_fair_value.proceed_amt > 2000
                                  or v_PD = 1 -- 100%
@@ -512,16 +512,16 @@ create or replace package body DM.PKG_FV_CALC as
 
         p_fair_value.PEC_V := v_k * v_roe * p_fair_value.FTP_V;
 
-        dm.u_log(GC_PACKAGE,'calc_pay_economic_capital/END','РџР»Р°С‚Р° Р·Р° СЌРєРѕРЅРѕРјРёС‡РµСЃРєРёР№ РєР°РїРёС‚Р°Р»');
+        dm.u_log(GC_PACKAGE,'calc_pay_economic_capital/END','Плата за экономический капитал');
     exception
-        when others then dm.u_log(GC_PACKAGE,'calc_pay_economic_capital/error','РћС€РёР±РєР° РІ СЂР°СЃС‡С‘С‚Рµ "РџР»Р°С‚Р° Р·Р° СЌРєРѕРЅРѕРјРёС‡РµСЃРєРёР№ РєР°РїРёС‚Р°Р»" '||sqlerrm); gv_exc_flag := 'N'; raise;
+        when others then dm.u_log(GC_PACKAGE,'calc_pay_economic_capital/error','Ошибка в расчёте "Плата за экономический капитал" '||sqlerrm); gv_exc_flag := 'N'; raise;
     end;
 
-    -- РџСЂСЏРјС‹Рµ СЂР°СЃС…РѕРґС‹ Р±РёР·РЅРµСЃ-РїРѕРґСЂР°Р·РґРµР»РµРЅРёСЏ
+    -- Прямые расходы бизнес-подразделения
     procedure calc_direct_expenses(p_fair_value in out nocopy t_fair_value) is
     begin
         dbms_application_info.set_action(action_name => 'calc_direct_expenses');
-        dm.u_log(GC_PACKAGE,'calc_direct_expenses/BEGIN','РџСЂСЏРјС‹Рµ СЂР°СЃС…РѕРґС‹ Р±РёР·РЅРµСЃ-РїРѕРґСЂР°Р·РґРµР»РµРЅРёСЏ');
+        dm.u_log(GC_PACKAGE,'calc_direct_expenses/BEGIN','Прямые расходы бизнес-подразделения');
         begin
             select DIRECT_COST_RATE
               into p_fair_value.direct_costs_v
@@ -529,16 +529,16 @@ create or replace package body DM.PKG_FV_CALC as
              where VALID_TO_DTTM = GC_EOW and p_fair_value.SNAPSHOT_DT between START_DT and END_DT;
         exception when no_data_found then null; -- no data extracted
         end;
-        dm.u_log(GC_PACKAGE,'calc_direct_expenses/END','РџСЂСЏРјС‹Рµ СЂР°СЃС…РѕРґС‹ Р±РёР·РЅРµСЃ-РїРѕРґСЂР°Р·РґРµР»РµРЅРёСЏ');
+        dm.u_log(GC_PACKAGE,'calc_direct_expenses/END','Прямые расходы бизнес-подразделения');
     exception
-        when others then dm.u_log(GC_PACKAGE,'calc_treasury_spread/error','РћС€РёР±РєР° РІ СЂР°СЃС‡С‘С‚Рµ "РџСЂСЏРјС‹Рµ СЂР°СЃС…РѕРґС‹ Р±РёР·РЅРµСЃ-РїРѕРґСЂР°Р·РґРµР»РµРЅРёСЏ" '||sqlerrm); gv_exc_flag := 'N'; raise;
+        when others then dm.u_log(GC_PACKAGE,'calc_treasury_spread/error','Ошибка в расчёте "Прямые расходы бизнес-подразделения" '||sqlerrm); gv_exc_flag := 'N'; raise;
     end;
 
-    -- РђРґРјРёРЅРёСЃС‚СЂР°С‚РёРІРЅРѕ-С…РѕР·СЏР№СЃС‚РІРµРЅРЅС‹Рµ СЂР°СЃС…РѕРґС‹
+    -- Административно-хозяйственные расходы
     procedure calc_administrative_expense(p_fair_value in out nocopy t_fair_value) is
     begin
         dbms_application_info.set_action(action_name => 'calc_administrative_expense');
-        dm.u_log(GC_PACKAGE,'calc_administrative_expense/BEGIN','РђРґРјРёРЅРёСЃС‚СЂР°С‚РёРІРЅРѕ-С…РѕР·СЏР№СЃС‚РІРµРЅРЅС‹Рµ СЂР°СЃС…РѕРґС‹');
+        dm.u_log(GC_PACKAGE,'calc_administrative_expense/BEGIN','Административно-хозяйственные расходы');
         begin
             select MAINTENENCE_COST_RATE
               into p_fair_value.maintenence_costs_v
@@ -546,32 +546,32 @@ create or replace package body DM.PKG_FV_CALC as
              where VALID_TO_DTTM = GC_EOW and p_fair_value.SNAPSHOT_DT between START_DT and END_DT;
         exception when no_data_found then null; -- no data extracted
         end;
-        dm.u_log(GC_PACKAGE,'calc_administrative_expense/END','РђРґРјРёРЅРёСЃС‚СЂР°С‚РёРІРЅРѕ-С…РѕР·СЏР№СЃС‚РІРµРЅРЅС‹Рµ СЂР°СЃС…РѕРґС‹');
+        dm.u_log(GC_PACKAGE,'calc_administrative_expense/END','Административно-хозяйственные расходы');
     exception
-        when others then dm.u_log(GC_PACKAGE,'calc_administrative_expense/error','РћС€РёР±РєР° РІ СЂР°СЃС‡С‘С‚Рµ "РђРґРјРёРЅРёСЃС‚СЂР°С‚РёРІРЅРѕ-С…РѕР·СЏР№СЃС‚РІРµРЅРЅС‹Рµ СЂР°СЃС…РѕРґС‹" '||sqlerrm); gv_exc_flag := 'N'; raise;
+        when others then dm.u_log(GC_PACKAGE,'calc_administrative_expense/error','Ошибка в расчёте "Административно-хозяйственные расходы" '||sqlerrm); gv_exc_flag := 'N'; raise;
     end;
 
     procedure main(
-        p_snapshot_dt date default trunc(sysdate) -- Р”Р°С‚Р° СЂР°СЃС‡РµС‚Р° (РЅР° РєР°РєСѓСЋ РґР°С‚Сѓ Р·Р°РїСѓСЃРєР°РµС‚СЃСЏ СЂР°СЃС‡РµС‚)
-        ,p_client_name varchar2 --Р›РёР·РёРЅРіРѕРїРѕР»СѓС‡Р°С‚РµР»СЊ
-        ,p_term_amt number -- РЎСЂРѕРє СЃРґРµР»РєРё
-        ,p_total_sum number -- РЎСѓРјРјР° СЃРґРµР»РєРё
-        ,p_rating_model_key number -- РљР»СЋС‡ СЂРµР№С‚РёРЅРіРѕРІРѕР№ РјРѕРґРµР»Рё
-        ,p_rating_nam varchar2 -- Р РµР№С‚РёРЅРі
-        ,p_leasing_subject_type_cd varchar2 -- РўРёРїР° Р»РёР·РёРЅРіРѕРІРѕРіРѕ РёРјСѓС‰РµСЃС‚РІР°
-        ,p_currency_letter_cd varchar2 -- Р’Р°Р»СЋС‚Р° С‚РёРїР° СЃС‚Р°РІРєРё
-        ,p_fixfloat varchar2 -- РџСЂРёР·РЅР°Рє С„РёРєСЃРёСЂРѕРІР°РЅРЅРѕР№ РїР»Р°РІР°СЋС‰РµР№ СЃС‚Р°РІРєРё
-        ,p_contracts_terms_key number -- РљР»СЋС‡ СѓСЃР»РѕРІРёР№ РєРѕРЅС‚СЂР°РєС‚Р°
-        ,p_ftp_calculation_method_key number -- РљР»СЋС‡Рё РњРµС‚РѕРґРёРєРё СЂР°СЃС‡РµС‚Р° СЃС‚Р°РІРєРё FTP
-        ,p_schedule_file_name varchar2 -- Р“СЂР°С„РёРє РїРѕРіР°С€РµРЅРёСЏ РћР”
-        ,p_early_spread_type_key number -- РљР»СЋС‡ РІРёРґР° СЃРїСЂРµРґР° РЅР° РґРѕСЃСЂРѕС‡РЅРѕРµ РїРѕРіР°С€РµРЅРёРµ
-        ,p_moratory_term_amt number -- РЎСЂРѕРє РјРѕСЂР°С‚РѕСЂРёСЏ
-        ,p_fix_period_amt number -- РџРµСЂРёРѕРґ С„РёРєСЃР°С†РёРё
-        ,p_use_period_amt number -- РџРµСЂРёРѕРґ РёСЃРїРѕР»СЊР·РѕРІР°РЅРёСЏ
-        ,p_ind_cncl_term_amt number -- РЎСЂРѕРє РѕС‚РјРµРЅС‹ С‚РµСЃС‚РёСЂРѕРІР°РЅРёСЏ
-        ,p_balance_debt_amt number -- Р‘Р°Р»Р°РЅСЃРѕРІР°СЏ РІРµР»РёС‡РёРЅР° Р·Р°РґРѕР»Р¶РµРЅРЅРѕСЃС‚Рё, СЂСѓР±.
-        ,p_market_value_amt number --  Р С‹РЅРѕС‡РЅР°СЏ СЃС‚РѕРёРјРѕСЃС‚СЊ РёРјСѓС‰РµСЃС‚РІР°
-        ,p_proceed_amt number -- Р’С‹СЂСѓС‡РєР°, РјР»РЅ. RUB Р±РµР· РќР”РЎ Р·Р° РїРѕСЃР»РµРґРЅРёР№ РєР°Р»РµРЅРґР°СЂРЅС‹Р№ РіРѕРґ
+        p_snapshot_dt date default trunc(sysdate) -- Дата расчета (на какую дату запускается расчет)
+        ,p_client_name varchar2 --Лизингополучатель
+        ,p_term_amt number -- Срок сделки
+        ,p_total_sum number -- Сумма сделки
+        ,p_rating_model_key number -- Ключ рейтинговой модели
+        ,p_rating_nam varchar2 -- Рейтинг
+        ,p_leasing_subject_type_cd varchar2 -- Типа лизингового имущества
+        ,p_currency_letter_cd varchar2 -- Валюта типа ставки
+        ,p_fixfloat varchar2 -- Признак фиксированной плавающей ставки
+        ,p_contracts_terms_key number -- Ключ условий контракта
+        ,p_ftp_calculation_method_key number -- Ключи Методики расчета ставки FTP
+        ,p_schedule_file_name varchar2 -- График погашения ОД
+        ,p_early_spread_type_key number -- Ключ вида спреда на досрочное погашение
+        ,p_moratory_term_amt number -- Срок моратория
+        ,p_fix_period_amt number -- Период фиксации
+        ,p_use_period_amt number -- Период использования
+        ,p_ind_cncl_term_amt number -- Срок отмены тестирования
+        ,p_balance_debt_amt number -- Балансовая величина задолженности, руб.
+        ,p_market_value_amt number --  Рыночная стоимость имущества
+        ,p_proceed_amt number -- Выручка, млн. RUB без НДС за последний календарный год
     ) is
         v_fair_value t_Fair_Value;
         v_fv_max_term number;
@@ -602,38 +602,38 @@ create or replace package body DM.PKG_FV_CALC as
         end;
     begin
         gv_exc_flag := 'Y'; -- initial value for single run
-        dm.u_log(GC_PACKAGE, 'main/BEGIN','РќР°С‡Р°Р»Рѕ СЂР°СЃС‡С‘С‚Р° СЃРїСЂР°РІРµРґР»РёРІРѕР№ СЃС‚Р°РІРєРё. Р”Р°С‚Р° СЂР°СЃС‡С‘С‚Р° '||to_char(p_snapshot_dt,'YYYY-MM-DD')
-                                                                               ||' РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ '||user);
+        dm.u_log(GC_PACKAGE, 'main/BEGIN','Начало расчёта справедливой ставки. Дата расчёта '||to_char(p_snapshot_dt,'YYYY-MM-DD')
+                                                                               ||' пользователь '||user);
         dbms_application_info.set_module(module_name => GC_PACKAGE, action_name => 'main');
         dbms_application_info.set_client_info(client_info => to_char(p_snapshot_dt,'yyyy-mm-dd'));
 
         --validate_mandatory;
         init_fair_record;
-        -------log Р—Р°РїСѓСЃРє СЂР°СЃС‡РµС‚Р° id date params;
+        -------log Запуск расчета id date params;
         -------load repayment schedule;
 
-        -- Р•СЃР»Рё [РЎСЂРѕРє СЃРґРµР»РєРё] РїСЂРµРІС‹С€Р°РµС‚ С…РѕС‚СЏ Р±С‹ РѕРґРёРЅ РјР°РєСЃРёРјР°Р»СЊРЅС‹Р№ СЃСЂРѕРє
+        -- Если [Срок сделки] превышает хотя бы один максимальный срок
         v_fv_max_term := get_over_fv_max_term(v_fair_value);
         if not v_fv_max_term is null then
-            v_fair_value.comment := 'Р”Р»СЏ СЃРґРµР»РѕРє Р±РѕР»РµРµ '||v_fv_max_term||' РґРЅ. РЅРµРѕР±С…РѕРґРёРјРѕ РёРЅРґРёРІРёРґСѓР°Р»СЊРЅРѕ СЃРѕРіР»Р°СЃРѕРІР°РЅРёРµ СЃ РљР°Р·РЅР°С‡РµР№СЃС‚РІРѕРј';
+            v_fair_value.comment := 'Для сделок более '||v_fv_max_term||' дн. необходимо индивидуально согласование с Казначейством';
         end if;
 
-        -- Р Р°СЃС‡РµС‚ РєСЂРёРІРѕР№ FTP (РўСЂР°РЅСЃС„РµСЂС‚РЅРѕР№ СЃС‚Р°РІРєРё)
+        -- Расчет кривой FTP (Трансфертной ставки)
         calc_ftp(v_fair_value);
-        -- РљР°Р·РЅР°С‡РµР№СЃРєРёРµ СЃРїСЂРµРґС‹ (РЅР°РґР±Р°РІРєРё Р·Р° РїСЂР°РІРѕ РґРѕСЃСЂРѕС‡РЅРѕРіРѕ РїРѕРіР°С€РµРЅРёСЏ, РѕС‚РјРµРЅСѓ РёРЅРґРёРєР°С‚РѕСЂРѕРІ Рё С„РёРєСЃР°С†РёСЋ СЃС‚Р°РІРєРё РЅР° РїРµСЂРёРѕРґ РІС‹Р±РѕСЂРєРё)
+        -- Казначейские спреды (надбавки за право досрочного погашения, отмену индикаторов и фиксацию ставки на период выборки)
         calc_treasury_spread(v_fair_value);
-        -- РџСЂРµРјРёСЏ Р·Р° РєСЂРµРґРёС‚РЅС‹Р№ СЂРёСЃРє (РЅР°РґР±Р°РІРєР° РЅР° РїРѕРєСЂС‹С‚РёРµ СЂРёСЃРєР° РґРµС„РѕР»С‚Р° РєР»РёРµРЅС‚Р°)
+        -- Премия за кредитный риск (надбавка на покрытие риска дефолта клиента)
         calc_credit_risk_premium(v_fair_value);
-        -- РџР»Р°С‚Р° Р·Р° СЌРєРѕРЅРѕРјРёС‡РµСЃРєРёР№ РєР°РїРёС‚Р°Р» (РЅР°РґР±Р°РІРєР° РЅР° РїРѕРєСЂС‹С‚РёРµ РґСЂСѓРіРёС… РѕРїРµСЂР°С†РёРѕРЅРЅС‹С… Рё Р±РёР·РЅРµСЃ-СЂРёСЃРєРѕРІ)
+        -- Плата за экономический капитал (надбавка на покрытие других операционных и бизнес-рисков)
         calc_pay_economic_capital(v_fair_value);
-        -- РџСЂСЏРјС‹Рµ СЂР°СЃС…РѕРґС‹ Р±РёР·РЅРµСЃ-РїРѕРґСЂР°Р·РґРµР»РµРЅРёСЏ
+        -- Прямые расходы бизнес-подразделения
         calc_direct_expenses(v_fair_value);
-        -- РђРґРјРёРЅРёСЃС‚СЂР°С‚РёРІРЅРѕ-С…РѕР·СЏР№СЃС‚РІРµРЅРЅС‹Рµ СЂР°СЃС…РѕРґС‹
+        -- Административно-хозяйственные расходы
         calc_administrative_expense(v_fair_value);
 
         update_fair_result(v_fair_value);
 
-        dm.u_log(GC_PACKAGE,'main/END','Р Р°СЃС‡РµС‚ СЃС„РѕСЂРјРёСЂРѕРІР°РЅ CALCULATION_ID='||v_fair_value.calculation_id);
+        dm.u_log(GC_PACKAGE,'main/END','Расчет сформирован CALCULATION_ID='||v_fair_value.calculation_id);
     exception
         when others then
             if gv_exc_flag = 'Y' then
