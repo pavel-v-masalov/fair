@@ -1,0 +1,7 @@
+create table DWH.FTP_CALCULATION_METHODS (
+    FTP_CALCULATION_METHOD_KEY NUMBER primary key,
+    FTP_CALCULATION_METHOD_NAME VARCHAR2(100)
+);
+comment on table DWH.FTP_CALCULATION_METHODS is 'Справочник методик расчета FTP';
+comment on column DWH.FTP_CALCULATION_METHODS.FTP_CALCULATION_METHOD_KEY is 'Ключ методики';
+comment on column DWH.FTP_CALCULATION_METHODS.FTP_CALCULATION_METHOD_NAME is 'Название методики';
