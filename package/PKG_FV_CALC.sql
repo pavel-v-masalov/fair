@@ -1,6 +1,10 @@
 create or replace package DM.PKG_FV_CALC as
 
- procedure main(
+    function normal_inv_cumulative_distrib(p_n number, p_mean number default 0, p_deviation number default 1) return number;
+    function normal_distribution(p_n number) return number;
+    function normal_cumulative_distribution(p_n number, p_mean number default 0, p_deviation number default 1) return number;
+
+    procedure main(
                 p_snapshot_dt date default trunc(sysdate) -- Дата расчета (на какую дату запускается расчет)
                 ,p_client_name varchar2 --Лизингополучатель
                 ,p_term_amt number -- Срок сделки
@@ -27,12 +31,55 @@ end;
 /
 create or replace package body DM.PKG_FV_CALC as
 
+    C_ERROR constant int := -20222;
+
     GC_PACKAGE constant varchar2(30) := 'DM.PKG_FV_CALC';
     GC_EOW constant date := date '2400-01-01'; -- end of world
 
     GC_EXP_50 constant number := exp(-50);
+    GC_PI constant number := 3.1415926;
+    GC_E  constant number := 2.71828;
+    GC_INFINITY constant number := 9999999999999999999999999999999999999999999999999999999999999; -- 1.0 / 0.0
 
     gv_exc_flag char(1) := 'Y'; --Исключение не обработано?
+
+    -- org.apache.commons.math3.special.Gamma
+    INV_GAMMA1P_M1_A0 constant number := .611609510448141581788E-08;
+    INV_GAMMA1P_M1_A1 constant number := .624730830116465516210E-08;
+    INV_GAMMA1P_M1_B1 constant number := .203610414066806987300E+00;
+    INV_GAMMA1P_M1_B2 constant number := .266205348428949217746E-01;
+    INV_GAMMA1P_M1_B3 constant number := .493944979382446875238E-03;
+    INV_GAMMA1P_M1_B4 constant number := -.851419432440314906588E-05;
+    INV_GAMMA1P_M1_B5 constant number := -.643045481779353022248E-05;
+    INV_GAMMA1P_M1_B6 constant number := .992641840672773722196E-06;
+    INV_GAMMA1P_M1_B7 constant number := -.607761895722825260739E-07;
+    INV_GAMMA1P_M1_B8 constant number := .195755836614639731882E-09;
+    INV_GAMMA1P_M1_P0 constant number := .6116095104481415817861E-08;
+    INV_GAMMA1P_M1_P1 constant number := .6871674113067198736152E-08;
+    INV_GAMMA1P_M1_P2 constant number := .6820161668496170657918E-09;
+    INV_GAMMA1P_M1_P3 constant number := .4686843322948848031080E-10;
+    INV_GAMMA1P_M1_P4 constant number := .1572833027710446286995E-11;
+    INV_GAMMA1P_M1_P5 constant number := -.1249441572276366213222E-12;
+    INV_GAMMA1P_M1_P6 constant number := .4343529937408594255178E-14;
+    INV_GAMMA1P_M1_Q1 constant number := .3056961078365221025009E+00;
+    INV_GAMMA1P_M1_Q2 constant number := .5464213086042296536016E-01;
+    INV_GAMMA1P_M1_Q3 constant number := .4956830093825887312020E-02;
+    INV_GAMMA1P_M1_Q4 constant number := .2692369466186361192876E-03;
+    INV_GAMMA1P_M1_C constant number := -.422784335098467139393487909917598E+00;
+    INV_GAMMA1P_M1_C0 constant number := .577215664901532860606512090082402E+00;
+    INV_GAMMA1P_M1_C1 constant number := -.655878071520253881077019515145390E+00;
+    INV_GAMMA1P_M1_C2 constant number := -.420026350340952355290039348754298E-01;
+    INV_GAMMA1P_M1_C3 constant number := .166538611382291489501700795102105E+00;
+    INV_GAMMA1P_M1_C4 constant number := -.421977345555443367482083012891874E-01;
+    INV_GAMMA1P_M1_C5 constant number := -.962197152787697356211492167234820E-02;
+    INV_GAMMA1P_M1_C6 constant number := .721894324666309954239501034044657E-02;
+    INV_GAMMA1P_M1_C7 constant number := -.116516759185906511211397108401839E-02;
+    INV_GAMMA1P_M1_C8 constant number := -.215241674114950972815729963053648E-03;
+    INV_GAMMA1P_M1_C9 constant number := .128050282388116186153198626328164E-03;
+    INV_GAMMA1P_M1_C10 constant number := -.201348547807882386556893914210218E-04;
+    INV_GAMMA1P_M1_C11 constant number := -.125049348214267065734535947383309E-05;
+    INV_GAMMA1P_M1_C12 constant number := .113302723198169588237412962033074E-05;
+    INV_GAMMA1P_M1_C13 constant number := -.205633841697760710345015413002057E-06;
 
     subtype t_fair_value is DM.FAIR_VALUE%rowtype;
     
@@ -47,18 +94,263 @@ create or replace package body DM.PKG_FV_CALC as
       return case when p_n1 > p_n2 then p_n1 else p_n2 end;
     end;
 
-    function inverse_normal_distribution(p_n number, p_averege number default 0, p_deviation number default 1) return number is
+    function pl_abs(n number) return number is
     begin
-        -- http://statistica.ru/theory/obratnoe-normalnoe-raspredelenie-zadacha-o-konkurentsii/
-        --
-        --https://commons.apache.org/proper/commons-math/javadocs/api-3.6/org/apache/commons/math3/distribution/NormalDistribution.html
-        --https://www.programcreek.com/java-api-examples/?api=org.apache.commons.math3.distribution.NormalDistribution
-        return 2;
+        return case when n < 0 then - n else n end;
     end;
 
-    function normal_distribution(p_n number, p_averege number default 0, p_deviation number default 1) return number is
+    --https://www.boost.org/doc/libs/1_47_0/libs/math/doc/sf_and_dist/html/math_toolkit/dist/dist_ref/dists/inverse_gaussian_dist.html
+    --http://statistica.ru/theory/obratnoe-normalnoe-raspredelenie-zadacha-o-konkurentsii/
+    --https://commons.apache.org/proper/commons-math/javadocs/api-3.6/org/apache/commons/math3/distribution/NormalDistribution.html
+    --https://www.programcreek.com/java-api-examples/?api=org.apache.commons.math3.distribution.NormalDistribution
+    --http://torofimofu.blogspot.com/2018/02/oracle-11g-ii.html?m=1
+    --https://community.oracle.com/tech/developers/discussion/4009671/how-to-implement-excel-norm-s-dist-function
+
+    -- org.apache.commons.math3.special.Gamma#invGamma1pm1
+    function invGamma1pm1(x number) return number is
+        ret number;
+        t number;
+        a number;
+        b number;
+        c number;
+        p number;
+        q number;
     begin
-        return .1;
+        t := case when x <= 0.5 then x else (x - 0.5) - 0.5 end;
+        if (t < 0.0) then
+            a := INV_GAMMA1P_M1_A0 + t * INV_GAMMA1P_M1_A1;
+            b := INV_GAMMA1P_M1_B8;
+            b := INV_GAMMA1P_M1_B7 + t * b;
+            b := INV_GAMMA1P_M1_B6 + t * b;
+            b := INV_GAMMA1P_M1_B5 + t * b;
+            b := INV_GAMMA1P_M1_B4 + t * b;
+            b := INV_GAMMA1P_M1_B3 + t * b;
+            b := INV_GAMMA1P_M1_B2 + t * b;
+            b := INV_GAMMA1P_M1_B1 + t * b;
+            b := 1.0 + t * b;
+
+            c := INV_GAMMA1P_M1_C13 + t * (a / b);
+            c := INV_GAMMA1P_M1_C12 + t * c;
+            c := INV_GAMMA1P_M1_C11 + t * c;
+            c := INV_GAMMA1P_M1_C10 + t * c;
+            c := INV_GAMMA1P_M1_C9 + t * c;
+            c := INV_GAMMA1P_M1_C8 + t * c;
+            c := INV_GAMMA1P_M1_C7 + t * c;
+            c := INV_GAMMA1P_M1_C6 + t * c;
+            c := INV_GAMMA1P_M1_C5 + t * c;
+            c := INV_GAMMA1P_M1_C4 + t * c;
+            c := INV_GAMMA1P_M1_C3 + t * c;
+            c := INV_GAMMA1P_M1_C2 + t * c;
+            c := INV_GAMMA1P_M1_C1 + t * c;
+            c := INV_GAMMA1P_M1_C + t * c;
+            if (x > 0.5) then
+                ret := t * c / x;
+            else
+                ret := x * ((c + 0.5) + 0.5);
+            end if;
+        else
+            p := INV_GAMMA1P_M1_P6;
+            p := INV_GAMMA1P_M1_P5 + t * p;
+            p := INV_GAMMA1P_M1_P4 + t * p;
+            p := INV_GAMMA1P_M1_P3 + t * p;
+            p := INV_GAMMA1P_M1_P2 + t * p;
+            p := INV_GAMMA1P_M1_P1 + t * p;
+            p := INV_GAMMA1P_M1_P0 + t * p;
+
+            q := INV_GAMMA1P_M1_Q4;
+            q := INV_GAMMA1P_M1_Q3 + t * q;
+            q := INV_GAMMA1P_M1_Q2 + t * q;
+            q := INV_GAMMA1P_M1_Q1 + t * q;
+            q := 1.0 + t * q;
+
+            c := INV_GAMMA1P_M1_C13 + (p / q) * t;
+            c := INV_GAMMA1P_M1_C12 + t * c;
+            c := INV_GAMMA1P_M1_C11 + t * c;
+            c := INV_GAMMA1P_M1_C10 + t * c;
+            c := INV_GAMMA1P_M1_C9 + t * c;
+            c := INV_GAMMA1P_M1_C8 + t * c;
+            c := INV_GAMMA1P_M1_C7 + t * c;
+            c := INV_GAMMA1P_M1_C6 + t * c;
+            c := INV_GAMMA1P_M1_C5 + t * c;
+            c := INV_GAMMA1P_M1_C4 + t * c;
+            c := INV_GAMMA1P_M1_C3 + t * c;
+            c := INV_GAMMA1P_M1_C2 + t * c;
+            c := INV_GAMMA1P_M1_C1 + t * c;
+            c := INV_GAMMA1P_M1_C0 + t * c;
+            if (x > 0.5) then
+                ret := (t / x) * ((c - 0.5) - 0.5);
+            else
+                ret := x * c;
+            end if;
+        end if;
+        return ret;
+    end;
+
+
+    function logGamma1p(x number) return number is
+        function log1p(xx number) return number is
+        begin
+            return ln(1 + xx);
+        end;
+    begin
+        if (x < -0.5) then
+            raise_application_error(C_ERROR, 'NumberIsTooSmall '||x);
+        elsif (x > 1.5) then
+            raise_application_error(C_ERROR, 'NumberIsTooLarge '||x);
+        end if;
+
+        return -log1p(invGamma1pm1(x));
+    end;
+
+    -- org.apache.commons.math3.special.Gamma#logGamma
+    function logGamma(x number) return number is
+        n int;
+        prod number;
+    begin
+        if (x < 0.5) then
+            return logGamma1p(x) - ln(x);
+        elsif (x <= 2.5) then
+            return logGamma1p((x - 0.5) - 0.5);
+        else
+            n := floor(x - 1.5);
+            prod := 1.0;
+            for i in 1 .. n loop
+                prod := prod * x - i;
+            end loop;
+            return logGamma1p(x - (n + 1)) + ln(prod);
+        end if;
+    end;
+
+    -- org.apache.commons.math3.special.Gamma#regularizedGammaP(double, double, double, int)
+    function regularizedGammaP(a number, x number, epsilon number, maxIterations int) return number is
+        ret number;
+        n number := 0.0; -- current element index
+        an number := 1.0 / a; -- n-th element in the series
+        v_sum number := an; -- partial sum
+    begin
+        -- calculate series
+        while pl_abs(an/v_sum) > epsilon and n < maxIterations and v_sum < GC_INFINITY loop
+            -- compute next element in the series
+            n := n + 1.0;
+            an := an * x / (a + n);
+            -- update partial sum
+            v_sum := v_sum + an;
+        end loop;
+        if (n >= maxIterations) then
+            raise_application_error(C_ERROR, 'MaxCountExceeded '||maxIterations);
+        elsif v_sum < -gc_infinity or v_sum > gc_infinity then
+            ret := 1.0;
+        else
+            ret := exp(-x + (a * ln(x)) - logGamma(a)) * v_sum;
+        end if;
+        return ret;
+    end;
+
+    -- org.apache.commons.math3.special.Erf#erfInv
+    function erfInv(x number) return number is
+        w number;
+        p number;
+    begin
+        w := -ln((1.0 - x) * (1.0 + x));
+        if (w < 6.25) then
+            w := w - 3.125;
+            p :=  -3.6444120640178196996e-21;
+            p :=   -1.685059138182016589e-19 + p * w;
+            p :=   1.2858480715256400167e-18 + p * w;
+            p :=    1.115787767802518096e-17 + p * w;
+            p :=   -1.333171662854620906e-16 + p * w;
+            p :=   2.0972767875968561637e-17 + p * w;
+            p :=   6.6376381343583238325e-15 + p * w;
+            p :=  -4.0545662729752068639e-14 + p * w;
+            p :=  -8.1519341976054721522e-14 + p * w;
+            p :=   2.6335093153082322977e-12 + p * w;
+            p :=  -1.2975133253453532498e-11 + p * w;
+            p :=  -5.4154120542946279317e-11 + p * w;
+            p :=    1.051212273321532285e-09 + p * w;
+            p :=  -4.1126339803469836976e-09 + p * w;
+            p :=  -2.9070369957882005086e-08 + p * w;
+            p :=   4.2347877827932403518e-07 + p * w;
+            p :=  -1.3654692000834678645e-06 + p * w;
+            p :=  -1.3882523362786468719e-05 + p * w;
+            p :=    0.0001867342080340571352 + p * w;
+            p :=  -0.00074070253416626697512 + p * w;
+            p :=   -0.0060336708714301490533 + p * w;
+            p :=      0.24015818242558961693 + p * w;
+            p :=       1.6536545626831027356 + p * w;
+        elsif (w < 16.0) then
+            w := sqrt(w) - 3.25;
+            p :=   2.2137376921775787049e-09;
+            p :=   9.0756561938885390979e-08 + p * w;
+            p :=  -2.7517406297064545428e-07 + p * w;
+            p :=   1.8239629214389227755e-08 + p * w;
+            p :=   1.5027403968909827627e-06 + p * w;
+            p :=   -4.013867526981545969e-06 + p * w;
+            p :=   2.9234449089955446044e-06 + p * w;
+            p :=   1.2475304481671778723e-05 + p * w;
+            p :=  -4.7318229009055733981e-05 + p * w;
+            p :=   6.8284851459573175448e-05 + p * w;
+            p :=   2.4031110387097893999e-05 + p * w;
+            p :=   -0.0003550375203628474796 + p * w;
+            p :=   0.00095328937973738049703 + p * w;
+            p :=   -0.0016882755560235047313 + p * w;
+            p :=    0.0024914420961078508066 + p * w;
+            p :=   -0.0037512085075692412107 + p * w;
+            p :=     0.005370914553590063617 + p * w;
+            p :=       1.0052589676941592334 + p * w;
+            p :=       3.0838856104922207635 + p * w;
+        else
+            w := sqrt(w) - 5.0;
+            p :=  -2.7109920616438573243e-11;
+            p :=  -2.5556418169965252055e-10 + p * w;
+            p :=   1.5076572693500548083e-09 + p * w;
+            p :=  -3.7894654401267369937e-09 + p * w;
+            p :=   7.6157012080783393804e-09 + p * w;
+            p :=  -1.4960026627149240478e-08 + p * w;
+            p :=   2.9147953450901080826e-08 + p * w;
+            p :=  -6.7711997758452339498e-08 + p * w;
+            p :=   2.2900482228026654717e-07 + p * w;
+            p :=  -9.9298272942317002539e-07 + p * w;
+            p :=   4.5260625972231537039e-06 + p * w;
+            p :=  -1.9681778105531670567e-05 + p * w;
+            p :=   7.5995277030017761139e-05 + p * w;
+            p :=  -0.00021503011930044477347 + p * w;
+            p :=  -0.00013871931833623122026 + p * w;
+            p :=       1.0103004648645343977 + p * w;
+            p :=       4.8499064014085844221 + p * w;
+        end if;
+        return p * x;
+    end;
+
+    -- org.apache.commons.math3.special.Erf#erf(double)
+    function erf(x number) return number is
+        ret number;
+    begin
+        if (abs(x) > 40) then
+            return case when x > 0 then 1 else -1 end;
+        end if;
+        ret := regularizedGammaP(0.5, x * x, 1.0e-15, 10000);
+        return case when x < 0 then -ret else ret end;
+    end;
+
+
+    -- org.apache.commons.math3.distribution.NormalDistribution#inverseCumulativeProbability
+    function normal_inv_cumulative_distrib(p_n number, p_mean number default 0, p_deviation number default 1) return number is
+    begin
+        return p_mean + p_deviation * SQRT(2) * erfInv(2 * p_n - 1);
+    end;
+
+    -- implement as EXCEL NORM.S.DIST
+    --by https://community.oracle.com/tech/developers/discussion/4009671/how-to-implement-excel-norm-s-dist-function
+    function normal_distribution(p_n number) return number is
+    begin
+        return (1/sqrt(2*GC_PI)) * power(GC_E, -1*(power(p_n,2))/2);
+    end;
+
+    --
+    function normal_cumulative_distribution(p_n number, p_mean number default 0, p_deviation number default 1) return number is
+        dev number := p_n - p_mean;
+    begin
+        return 0.5 * (1 + erf(dev / (p_deviation * SQRT(2))));
     end;
 
     procedure insert_fair(p_fair_value in out nocopy t_fair_value) is
@@ -494,10 +786,10 @@ create or replace package body DM.PKG_FV_CALC as
                                  .04 * (1 - pl_max(100, p_fair_value.proceed_amt - 1) / 900) end;
         v_R := .12 * ((1 - exp(-50*v_pd))/(1 - GC_EXP_50)) + .24 * (1 - (1 - exp(-50*v_pd)) / (1 - GC_EXP_50));
 
-        v_n_reverse := inverse_normal_distribution(v_pd, 0, 1);
-        v_n_reverse_999 := inverse_normal_distribution(.999);
+        v_n_reverse := normal_inv_cumulative_distrib(v_pd);
+        v_n_reverse_999 := normal_inv_cumulative_distrib(.999);
         v_x := 1/sqrt(1 - v_r) * v_n_reverse + sqrt(v_r/(1 - v_r)) * v_n_reverse_999;
-        v_n := normal_distribution(v_x);
+        v_n := normal_cumulative_distribution(v_x);
         v_s := power(.11852 - .05478 * ln(v_pd), 2);
         v_a := 1 / (1 - 1.5 * v_s);
         v_effective_term := pl_max(2.5, p_fair_value.term_amt/365);
