@@ -346,7 +346,7 @@ create or replace package body DM.PKG_FV_CALC as
         return (1/sqrt(2*GC_PI)) * power(GC_E, -1*(power(p_n,2))/2);
     end;
 
-    --
+    --org.apache.commons.math3.distribution.NormalDistribution#cumulativeProbability(double)
     function normal_cumulative_distribution(p_n number, p_mean number default 0, p_deviation number default 1) return number is
         dev number := p_n - p_mean;
     begin
