@@ -800,7 +800,7 @@ create or replace package body DM.PKG_FV_CALC as
             select ROE
               into v_roe
               from DWH.ROE
-             where valid_to_dttm = GC_EOW and p_fair_value.SNAPSHOT_DT between START_DT and END_DT;
+             where valid_to_dttm = GC_EOW;
         exception when no_data_found then
             dm.u_log(GC_PACKAGE,'calc_pay_economic_capital','no_data_found at DWH.ROE');
             raise;
