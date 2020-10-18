@@ -31,7 +31,7 @@ end;
 /
 create or replace package body DM.PKG_FV_CALC as
 
-    C_ERROR constant int := -20222;
+    GC_ERROR constant int := -20222;
 
     GC_PACKAGE constant varchar2(30) := 'DM.PKG_FV_CALC';
     GC_EOW constant date := date '2400-01-01'; -- end of world
@@ -82,6 +82,7 @@ create or replace package body DM.PKG_FV_CALC as
     INV_GAMMA1P_M1_C13 constant number := -.205633841697760710345015413002057E-06;
 
     subtype t_fair_value is DM.FAIR_VALUE%rowtype;
+    subtype t_currate is DWH.CURRATES%rowtype;
     
     function pl_max(p_n1 number, p_n2 number) return number is
     begin
@@ -194,9 +195,9 @@ create or replace package body DM.PKG_FV_CALC as
         end;
     begin
         if (x < -0.5) then
-            raise_application_error(C_ERROR, 'NumberIsTooSmall '||x);
+            raise_application_error(GC_ERROR, 'NumberIsTooSmall '||x);
         elsif (x > 1.5) then
-            raise_application_error(C_ERROR, 'NumberIsTooLarge '||x);
+            raise_application_error(GC_ERROR, 'NumberIsTooLarge '||x);
         end if;
 
         return -log1p(invGamma1pm1(x));
@@ -237,7 +238,7 @@ create or replace package body DM.PKG_FV_CALC as
             v_sum := v_sum + an;
         end loop;
         if (n >= maxIterations) then
-            raise_application_error(C_ERROR, 'MaxCountExceeded '||maxIterations);
+            raise_application_error(GC_ERROR, 'MaxCountExceeded '||maxIterations);
         elsif v_sum < -gc_infinity or v_sum > gc_infinity then
             ret := 1.0;
         else
@@ -545,16 +546,89 @@ create or replace package body DM.PKG_FV_CALC as
             raise;
     end;
 
+    procedure get_currates(p_fair_value t_fair_value, p_rate_period number, p_currate1 out t_currate, p_currate2 out t_currate) is
+        v_rate_name varchar2(30) := 'ars'||p_fair_value.fixfloat;
+
+        cursor cur_rate1 is
+            select *
+              from DWH.CURRATES
+             where DENJ <= p_fair_value.report_dt
+               and RATEPERIOD <= p_rate_period
+               and RATENAME = v_rate_name
+               and CURR = p_fair_value.currency_letter_cd
+               and VALID_TO_DTTM = GC_EOW and p_fair_value.snapshot_dt between START_DT and END_DT
+            order by denj desc, RATEPERIOD desc;
+
+        cursor cur_rate2 is
+            select *
+            from DWH.CURRATES
+            where DENJ <= p_fair_value.report_dt
+              and RATEPERIOD > p_rate_period
+              and RATENAME = v_rate_name
+              and CURR = p_fair_value.currency_letter_cd
+              and VALID_TO_DTTM = GC_EOW and p_fair_value.snapshot_dt between START_DT and END_DT
+            order by denj desc, RATEPERIOD asc;
+
+    begin
+        dbms_application_info.set_action(action_name => 'get_currates');
+        open cur_rate1;
+        fetch cur_rate1 into p_currate1;
+        if p_currate1.denj is null then
+            raise_application_error(gc_error, 'No data fount for first currate');
+        end if;
+        close cur_rate1;
+
+        open cur_rate2;
+        fetch cur_rate2 into p_currate2;
+        if p_currate2.denj is null then
+            raise_application_error(gc_error, 'No data fount for second currate');
+        end if;
+        close cur_rate2;
+
+    exception
+        when others then
+            if cur_rate1%isopen then close cur_rate1; end if;
+            if cur_rate2%isopen then close cur_rate2; end if;
+            dm.u_log(GC_PACKAGE,'get_currates/error',
+                     'Ошибка при получении DWH.CURRATES по RATEPERIOD='||p_rate_period
+                         ||' DENJ<='||p_fair_value.report_dt
+                         ||' RATENAME='||v_rate_name
+                         ||' CURR='||p_fair_value.currency_letter_cd
+                         ||' '||sqlerrm);
+            gv_exc_flag := 'N';
+            raise;
+    end;
+
     -- Расчет кривой FTP (Трансфертной ставки)
     procedure calc_ftp(p_fair_value in out nocopy t_fair_value) is
+        v_fv_max_term number;
+        v_medium_term number;
+        v_rate_period number; -- Срок
+        v_currate1 t_currate;
+        v_currate2 t_currate;
     begin
         dbms_application_info.set_action(action_name => 'calc_ftp');
         dm.u_log(GC_PACKAGE,'calc_ftp/BEGIN','Расчет кривой FTP');
 
-        --v_fv_max_term get_max_term Трансфертная ставка  or    Трансфертная ставка (fix);
-        --get CURRRATES;
-
-        p_fair_value.ftp_v := 0.123456789;
+        v_fv_max_term := get_over_fv_max_term(p_fair_value, case p_fair_value.fixfloat when 'fix' then 'FTP_FIX' else 'FTP' end);
+        if not v_fv_max_term is null then
+            p_fair_value.ftp_v := v_fv_max_term;
+        else
+            if p_fair_value.ftp_calculation_method_key = 2 then -- WAL
+                with init_date as
+                (
+                    select min(DATE_FROM) init_date_from from DWH.SCHEDULES_FOR_FV where CALCULATION_ID = p_fair_value.calculation_id
+                )
+                select sum(LOAN_AMT * (DATE_TO - init_date.init_date_from)) / sum(LOAN_AMT)
+                  into v_medium_term
+                  from DWH.SCHEDULES_FOR_FV join init_date on 1=1
+                 where CALCULATION_ID = p_fair_value.calculation_id;
+            end if;
+            v_rate_period := case when v_medium_term is null then p_fair_value.term_amt else v_medium_term end;
+            get_currates(p_fair_value, v_rate_period, v_currate1, v_currate2);
+            p_fair_value.ftp_v := (v_currate1.rate * (v_currate2.rateperiod-v_rate_period) + v_currate2.rateperiod * (v_rate_period - v_currate1.rateperiod))
+                                   / (v_currate2.rateperiod - v_currate1.rateperiod);
+        end if;
 
         dm.u_log(GC_PACKAGE,'calc_ftp/END','Расчет кривой FTP');
     exception
