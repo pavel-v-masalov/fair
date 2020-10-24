@@ -621,11 +621,11 @@ create or replace package body DM.PKG_FV_CALC as
         select p_fair_value.calculation_id, INTERVAL2_DAYS_TO - INTERVAL2_DAYS_FROM, VALUE
           from DWH.TREASURY_SPREAD
          where TREASURY_SPREAD_TYPE = 'EARLY_REPAYMENT_COMISSION'
-            and CURRENCY_LETTER_CD = p_fair_value.currency_letter_cd
-            and FIXFLOAT = p_fair_value.fixfloat
-            and CONTRACTS_TERMS_KEY = p_fair_value.contracts_terms_key
-            and p_fair_value.term_amt between INTERVAL1_DAYS_FROM and INTERVAL1_DAYS_TO
-            and VALID_TO_DTTM = GC_EOW and p_fair_value.SNAPSHOT_DT between START_DT and END_DT;
+           and CURRENCY_LETTER_CD = p_fair_value.currency_letter_cd
+           and FIXFLOAT = p_fair_value.fixfloat
+           and CONTRACTS_TERMS_KEY = p_fair_value.contracts_terms_key
+           and p_fair_value.term_amt between INTERVAL1_DAYS_FROM and INTERVAL1_DAYS_TO
+           and VALID_TO_DTTM = GC_EOW and p_fair_value.SNAPSHOT_DT between START_DT and END_DT;
 
         dm.u_log(GC_PACKAGE,'c_t_s_commission/END','Расчет варианта Спред+комиссия');
     exception
