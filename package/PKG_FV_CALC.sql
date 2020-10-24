@@ -14,7 +14,7 @@ create or replace package DM.PKG_FV_CALC as
                 ,p_leasing_subject_type_cd varchar2 -- Типа лизингового имущества
                 ,p_currency_letter_cd varchar2 -- Валюта типа ставки
                 ,p_fixfloat varchar2 -- Признак фиксированной плавающей ставки
-                ,p_contracts_terms_key number -- Ключ условий контракта
+                ,p_contracts_terms_key number -- Ключ стандартных условий договора
                 ,p_ftp_calculation_method_key number -- Ключи Методики расчета ставки FTP
                 ,p_schedule_file_name varchar2 -- График погашения ОД
                 ,p_early_spread_type_key number -- Ключ вида спреда на досрочное погашение
@@ -460,34 +460,22 @@ create or replace package body DM.PKG_FV_CALC as
             gv_exc_flag := 'N';
             raise;
     end;
-/*
-    function get_treasury_spread(p_fair_value t_fair_value, p_treasury_spread_type varchar2, p_with_ind_cancel boolean default false) return number is
+
+    function get_treasury_spread(p_fair_value t_fair_value, p_treasury_spread_type varchar2, p_interval2 number default null) return number is
         v_value number;
     begin
         dbms_application_info.set_action(action_name => 'get_treasury_spread');
         begin
-            if p_with_ind_cancel then
-                select VALUE
-                  into v_value
-                  from DWH.TREASURY_SPREAD
-                 where TREASURY_SPREAD_TYPE = p_treasury_spread_type
-                    and CURRENCY_LETTER_CD = p_fair_value.currency_letter_cd
-                    and FIXFLOAT = p_fair_value.fixfloat
-                    and FEDERAL_LOW_TYPE_KEY = p_fair_value.federal_low_type_key
-                    and p_fair_value.term_amt between INTERVAL1_DAYS_FROM and INTERVAL1_DAYS_TO
-                    and p_fair_value.ind_cncl_term_amt between INTERVAL2_DAYS_FROM and INTERVAL2_DAY_TO
-                    and VALID_TO_DTTM = GC_EOW and p_fair_value.SNAPSHOT_DT between START_DT and END_DT;
-            else
-                select VALUE
-                  into v_value
-                  from DWH.TREASURY_SPREAD
-                 where TREASURY_SPREAD_TYPE = p_treasury_spread_type
-                   and CURRENCY_LETTER_CD = p_fair_value.currency_letter_cd
-                   and FIXFLOAT = p_fair_value.fixfloat
-                   and FEDERAL_LOW_TYPE_KEY = p_fair_value.federal_low_type_key
-                   and p_fair_value.term_amt between INTERVAL1_DAYS_FROM and INTERVAL1_DAYS_TO
-                   and VALID_TO_DTTM = GC_EOW and p_fair_value.SNAPSHOT_DT between START_DT and END_DT;
-            end if;
+            select VALUE
+              into v_value
+              from DWH.TREASURY_SPREAD
+             where TREASURY_SPREAD_TYPE = p_treasury_spread_type
+                and CURRENCY_LETTER_CD = p_fair_value.currency_letter_cd
+                and FIXFLOAT = p_fair_value.fixfloat
+                and CONTRACTS_TERMS_KEY = p_fair_value.contracts_terms_key
+                and p_fair_value.term_amt between INTERVAL1_DAYS_FROM and INTERVAL1_DAYS_TO
+                and (p_interval2 is null or p_interval2 between INTERVAL2_DAYS_FROM and INTERVAL2_DAYS_TO)
+                and VALID_TO_DTTM = GC_EOW and p_fair_value.SNAPSHOT_DT between START_DT and END_DT;
         exception when no_data_found then null; -- no value
         end;
         return v_value;
@@ -500,29 +488,6 @@ create or replace package body DM.PKG_FV_CALC as
             raise;
     end;
 
-    function get_treasury_spread_by_currency(p_fair_value t_fair_value, p_treasury_spread_type varchar2) return number is
-        v_value number;
-    begin
-        dbms_application_info.set_action(action_name => 'get_treasury_spread');
-        begin
-            select VALUE
-            into v_value
-            from DWH.TREASURY_SPREAD
-            where TREASURY_SPREAD_TYPE = p_treasury_spread_type
-                and CURRENCY_LETTER_CD = p_fair_value.currency_letter_cd
-                and VALID_TO_DTTM = GC_EOW and p_fair_value.SNAPSHOT_DT between START_DT and END_DT;
-        exception when no_data_found then null; -- no value
-        end;
-        return v_value;
-    exception
-        when others then
-            dm.u_log(GC_PACKAGE,'get_treasury_spread/error',
-                     'Ошибка при получении DWH.TREASURY_SPREAD для TREASURY_SPREAD_TYPE='''||p_treasury_spread_type||''' '
-                         ||sqlerrm);
-            gv_exc_flag := 'N';
-            raise;
-    end;
-*/
     function get_over_fv_max_term(p_fair_value t_fair_value, p_rate_type_cd varchar2 default null) return number is
         cursor cur_max_term is
             select max_term from DWH.FV_MAX_TERM
@@ -650,6 +615,18 @@ create or replace package body DM.PKG_FV_CALC as
     begin
         dbms_application_info.set_action(action_name => 'c_t_s_commission');
         dm.u_log(GC_PACKAGE,'c_t_s_commission/BEGIN','Расчет варианта Спред+комиссия');
+        p_fair_value.early_spread_v := get_treasury_spread(p_fair_value, 'EARLY_REPAYMENT');
+
+        insert into DM.FV_COMISSIONS (calculation_id, period_name, comission_amt)
+        select p_fair_value.calculation_id, INTERVAL2_DAYS_TO - INTERVAL2_DAYS_FROM, VALUE
+          from DWH.TREASURY_SPREAD
+         where TREASURY_SPREAD_TYPE = 'EARLY_REPAYMENT_COMISSION'
+            and CURRENCY_LETTER_CD = p_fair_value.currency_letter_cd
+            and FIXFLOAT = p_fair_value.fixfloat
+            and CONTRACTS_TERMS_KEY = p_fair_value.contracts_terms_key
+            and p_fair_value.term_amt between INTERVAL1_DAYS_FROM and INTERVAL1_DAYS_TO
+            and VALID_TO_DTTM = GC_EOW and p_fair_value.SNAPSHOT_DT between START_DT and END_DT;
+
         dm.u_log(GC_PACKAGE,'c_t_s_commission/END','Расчет варианта Спред+комиссия');
     exception
         when others then dm.u_log(GC_PACKAGE,'c_t_s_commission/error','Ошибка в "Расчет варианта Спред+комиссия" '||sqlerrm); gv_exc_flag := 'N'; raise;
@@ -660,6 +637,7 @@ create or replace package body DM.PKG_FV_CALC as
     begin
         dbms_application_info.set_action(action_name => 'c_t_s_moratorium');
         dm.u_log(GC_PACKAGE,'c_t_s_moratorium/BEGIN','Расчет варианта Мораторий+спред');
+        p_fair_value.early_spread_v := get_treasury_spread(p_fair_value, 'EARLY_REPAYMENT_MORATORY', p_fair_value.moratory_term_amt);
         dm.u_log(GC_PACKAGE,'c_t_s_moratorium/END','Расчет варианта Мораторий+спред');
     exception
         when others then dm.u_log(GC_PACKAGE,'c_t_s_moratorium/error','Ошибка в "Расчет варианта Мораторий+спред" '||sqlerrm); gv_exc_flag := 'N'; raise;
@@ -670,6 +648,7 @@ create or replace package body DM.PKG_FV_CALC as
     begin
         dbms_application_info.set_action(action_name => 'c_t_s_commission_liability');
         dm.u_log(GC_PACKAGE,'c_t_s_commission_liability/BEGIN','Комиссия за обязательство');
+        p_fair_value.revenue_comission_v := get_treasury_spread(p_fair_value, 'REVENUE_COMISSIONS');
         dm.u_log(GC_PACKAGE,'c_t_s_commission_liability/END','Комиссия за обязательство');
     exception
         when others then dm.u_log(GC_PACKAGE,'calc_ftp/error','Ошибка в "Комиссия за обязательство" '||sqlerrm); gv_exc_flag := 'N'; raise;
@@ -681,8 +660,15 @@ create or replace package body DM.PKG_FV_CALC as
         procedure i_do_calc is
         begin
             if p_fair_value.fix_period_amt is null then
-                null; --FIX_SPREAD
+                p_fair_value.fix_spread_v := 0;
+                return;
             end if;
+            v_fv_max_term := get_over_fv_max_term(p_fair_value, 'FIX_SPREAD'); -- Спред за фиксацию
+            if not v_fv_max_term is null then
+                p_fair_value.cncl_spread_v := v_fv_max_term;
+                return;
+            end if;
+            p_fair_value.cncl_spread_v := get_treasury_spread(p_fair_value, 'FIX_RATE', p_fair_value.fix_period_amt);
         end;
     begin
         dbms_application_info.set_action(action_name => 'c_t_s_fixation_rate');
@@ -698,39 +684,18 @@ create or replace package body DM.PKG_FV_CALC as
         v_fv_max_term number;
         procedure i_do_calc is
         begin
-            /*
-            if (p_fair_value.federal_low_type_key = 1 -- Не в рамках ФЗ
-                and p_fair_value.formulation_ind_cncl_key != 3) --Формулировка 3
-                or
-               (p_fair_value.federal_low_type_key != 1
-                and p_fair_value.ind_cncl_term_amt is null) then
-                p_fair_value.cncl_SPREAD_v := 0;
-                return;
-            end if;
             v_fv_max_term := get_over_fv_max_term(p_fair_value, 'CNCL_SREAD'); -- Спред за отмену индикаторов
             if not v_fv_max_term is null then
-                p_fair_value.cncl_SPREAD_v := v_fv_max_term;
+                p_fair_value.cncl_spread_v := v_fv_max_term;
                 return;
             end if;
 
-            if p_fair_value.federal_low_type_key in (2,3) -- 44-ФЗ  223-ФЗ
-               and p_fair_value.formulation_ind_cncl_key = 3 then -- Формулировка 3
-                p_fair_value.full_cncl_SPREAD_v := get_treasury_spread(p_fair_value, 'FULL_CNCL_INDC');
-            end if;
-
-            if p_fair_value.federal_low_type_key = 1 -- Не в рамках ФЗ
-                and p_fair_value.formulation_ind_cncl_key = 3 then -- Формулировка 3
-                p_fair_value.term_cncl_SPREAD_v := get_treasury_spread(p_fair_value, 'TERM_CNCL_INDC', true);
-            end if;
-
-            if p_fair_value.federal_low_type_key != 3 -- Формулировка 3
-               and p_fair_value.formulation_ind_cncl_key in (1, 4) then -- Формулировка 1, Формулировка 4
-                p_fair_value.one_cncl_SPREAD_v := get_treasury_spread(p_fair_value, 'ONE_CNCL_INDC');
-                p_fair_value.barrier := get_treasury_spread_by_currency(p_fair_value, 'BARRIER');
-            end if;
-            */
+            p_fair_value.full_cncl_SPREAD_v := get_treasury_spread(p_fair_value, 'FULL_CNCL_INDC');
+            p_fair_value.term_cncl_SPREAD_v := get_treasury_spread(p_fair_value, 'TERM_CNCL_INDC', p_fair_value.ind_cncl_term_amt);
+            p_fair_value.one_cncl_SPREAD_v := get_treasury_spread(p_fair_value, 'ONE_CNCL_INDC');
+            p_fair_value.barrier := get_treasury_spread(p_fair_value, 'BARRIER');
             p_fair_value.cncl_SPREAD_v := nvl(p_fair_value.cncl_SPREAD_v, 0) + nvl(p_fair_value.full_cncl_SPREAD_v, 0)
-                                         + nvl(p_fair_value.term_cncl_SPREAD_v, 0) + nvl(p_fair_value.one_cncl_SPREAD_v, 0);
+                                          + nvl(p_fair_value.term_cncl_SPREAD_v, 0) + nvl(p_fair_value.one_cncl_SPREAD_v, 0);
         end;
     begin
         dbms_application_info.set_action(action_name => 'c_t_s_compensate_indicator');
@@ -931,7 +896,7 @@ create or replace package body DM.PKG_FV_CALC as
         ,p_leasing_subject_type_cd varchar2 -- Типа лизингового имущества
         ,p_currency_letter_cd varchar2 -- Валюта типа ставки
         ,p_fixfloat varchar2 -- Признак фиксированной плавающей ставки
-        ,p_contracts_terms_key number -- Ключ условий контракта
+        ,p_contracts_terms_key number -- Ключ стандартных условий договора
         ,p_ftp_calculation_method_key number -- Ключи Методики расчета ставки FTP
         ,p_schedule_file_name varchar2 -- График погашения ОД
         ,p_early_spread_type_key number -- Ключ вида спреда на досрочное погашение
