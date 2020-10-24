@@ -83,7 +83,7 @@ create or replace package body DM.PKG_FV_CALC as
 
     subtype t_fair_value is DM.FAIR_VALUE%rowtype;
     subtype t_currate is DWH.CURRATES%rowtype;
-    
+
     function pl_max(p_n1 number, p_n2 number) return number is
     begin
       if p_n1 is null then
@@ -615,7 +615,7 @@ create or replace package body DM.PKG_FV_CALC as
     begin
         dbms_application_info.set_action(action_name => 'c_t_s_commission');
         dm.u_log(GC_PACKAGE,'c_t_s_commission/BEGIN','Расчет варианта Спред+комиссия');
-        p_fair_value.early_spread_v := get_treasury_spread(p_fair_value, 'EARLY_REPAYMENT');
+        p_fair_value.early_spread_v := nvl(get_treasury_spread(p_fair_value, 'EARLY_REPAYMENT'), p_fair_value.early_spread_v);
 
         insert into DM.FV_COMISSIONS (calculation_id, period_name, comission_amt)
         select p_fair_value.calculation_id, INTERVAL2_DAYS_TO - INTERVAL2_DAYS_FROM, VALUE
@@ -629,7 +629,8 @@ create or replace package body DM.PKG_FV_CALC as
 
         dm.u_log(GC_PACKAGE,'c_t_s_commission/END','Расчет варианта Спред+комиссия');
     exception
-        when others then dm.u_log(GC_PACKAGE,'c_t_s_commission/error','Ошибка в "Расчет варианта Спред+комиссия" '||sqlerrm); gv_exc_flag := 'N'; raise;
+        when others then dm.u_log(GC_PACKAGE,'c_t_s_commission/error','Ошибка в "Расчет варианта Спред+комиссия" '||sqlerrm); gv_exc_flag := 'N';
+            raise;
     end;
 
     -- Расчет варианта Мораторий+спред
@@ -637,10 +638,12 @@ create or replace package body DM.PKG_FV_CALC as
     begin
         dbms_application_info.set_action(action_name => 'c_t_s_moratorium');
         dm.u_log(GC_PACKAGE,'c_t_s_moratorium/BEGIN','Расчет варианта Мораторий+спред');
-        p_fair_value.early_spread_v := get_treasury_spread(p_fair_value, 'EARLY_REPAYMENT_MORATORY', p_fair_value.moratory_term_amt);
+        p_fair_value.early_spread_v :=
+            nvl(get_treasury_spread(p_fair_value, 'EARLY_REPAYMENT_MORATORY', p_fair_value.moratory_term_amt), p_fair_value.early_spread_v);
         dm.u_log(GC_PACKAGE,'c_t_s_moratorium/END','Расчет варианта Мораторий+спред');
     exception
-        when others then dm.u_log(GC_PACKAGE,'c_t_s_moratorium/error','Ошибка в "Расчет варианта Мораторий+спред" '||sqlerrm); gv_exc_flag := 'N'; raise;
+        when others then dm.u_log(GC_PACKAGE,'c_t_s_moratorium/error','Ошибка в "Расчет варианта Мораторий+спред" '||sqlerrm); gv_exc_flag := 'N';
+            raise;
     end;
 
     -- Комиссия за обязательство
@@ -676,7 +679,8 @@ create or replace package body DM.PKG_FV_CALC as
         i_do_calc();
         dm.u_log(GC_PACKAGE,'c_t_s_fixation_rate/END','Компенсирующий спред за фиксацию ставки');
     exception
-        when others then dm.u_log(GC_PACKAGE,'c_t_s_fixation_rate/error','Ошибка в "Компенсирующий спред за фиксацию ставки" '||sqlerrm); gv_exc_flag := 'N'; raise;
+        when others then dm.u_log(GC_PACKAGE,'c_t_s_fixation_rate/error','Ошибка в "Компенсирующий спред за фиксацию ставки" '||sqlerrm);
+            gv_exc_flag := 'N'; raise;
     end;
 
     -- Компенсирующий спред за отмену/отсутствие индикаторов
