@@ -25,6 +25,8 @@ create or replace package DM.PKG_FV_CALC as
                 ,p_balance_debt_amt number -- Балансовая величина задолженности, руб.
                 ,p_market_value_amt number --  Рыночная стоимость имущества
                 ,p_proceed_amt number -- Выручка, млн. RUB без НДС за последний календарный год
+                ,p_other_spread number -- Прочие спреды
+                ,p_other_spread_comment varchar2 -- Комментарий к прочим спредам
     );
 
 end;
@@ -378,7 +380,9 @@ create or replace package body DM.PKG_FV_CALC as
             ind_cncl_term_amt,
             balance_debt_amt,
             market_value_amt,
-            proceed_amt
+            proceed_amt,
+            other_spread,
+            other_spread_comment
         )
         values (
             DM.FAIR_VALUE_SEQ.nextval,
@@ -402,9 +406,12 @@ create or replace package body DM.PKG_FV_CALC as
             p_fair_value.ind_cncl_term_amt,
             p_fair_value.balance_debt_amt,
             p_fair_value.market_value_amt,
-            p_fair_value.proceed_amt
+            p_fair_value.proceed_amt,
+            p_fair_value.other_spread,
+            p_fair_value.other_spread_comment
         )
-        return CALCULATION_ID into p_fair_value.calculation_id;
+        return CALCULATION_ID, report_dt into p_fair_value.calculation_id, p_fair_value.report_dt;
+        commit;
     exception
         when others then
             dm.u_log(GC_PACKAGE, 'insert_fair/error', 'Ошибка при создании DM.FAIR_VALUE '||sqlerrm);
@@ -591,7 +598,7 @@ create or replace package body DM.PKG_FV_CALC as
             end if;
             v_rate_period := case when v_medium_term is null then p_fair_value.term_amt else v_medium_term end;
             get_currates(p_fair_value, v_rate_period, v_currate1, v_currate2);
-            p_fair_value.ftp_v := (v_currate1.rate * (v_currate2.rateperiod-v_rate_period) + v_currate2.rateperiod * (v_rate_period - v_currate1.rateperiod))
+            p_fair_value.ftp_v := (v_currate1.rate * (v_currate2.rateperiod-v_rate_period) + v_currate2.rate * (v_rate_period - v_currate1.rateperiod))
                                    / (v_currate2.rateperiod - v_currate1.rateperiod);
         end if;
 
@@ -751,7 +758,8 @@ create or replace package body DM.PKG_FV_CALC as
             select LGD
               into v_lgd
               from DWH.REF_LGD
-             where LEASING_SUBJECT_TYPE_CD = p_fair_value.leasing_subject_type_cd and LGD_TYPE_CD = 'RES'
+             where LEASING_SUBJECT_TYPE_CD = p_fair_value.leasing_subject_type_cd
+               and LGD_TYPE_CD = 'RES'
                and VALID_TO_DTTM = GC_EOW and p_fair_value.SNAPSHOT_DT between BEGIN_DT and END_DT;
         exception when no_data_found then
             dm.u_log(GC_PACKAGE,'calc_credit_risk_premium','no_data_found at DWH.REF_LGD for LEASING_SUBJECT_TYPE_CD='||p_fair_value.leasing_subject_type_cd
@@ -762,15 +770,16 @@ create or replace package body DM.PKG_FV_CALC as
             select PD1_MACRO
               into v_PD1_MACRO
               from DWH.PD_CORP
-             where RANK_MODEL_KEY = p_fair_value.rating_model_key and RAT_ON_DATE = p_fair_value.rating_nam
+             where RANK_MODEL_KEY = p_fair_value.rating_model_key
+               and RAT_ON_DATE = p_fair_value.rating_nam
                and VALID_TO_DTTM = GC_EOW and p_fair_value.SNAPSHOT_DT between ST_DATE and END_DATE;
         exception when no_data_found then
             dm.u_log(GC_PACKAGE,'calc_credit_risk_premium','no_data_found at DWH.PD_CORP for RANK_MODEL_KEY(as rating)='||p_fair_value.rating_model_key
-                                ||'RAT_ON_DATE='||p_fair_value.rating_nam);
+                                ||' RAT_ON_DATE='||p_fair_value.rating_nam);
             raise;
         end;
 
-        p_fair_value.PKR_V := v_pd1_macro + v_lgd;
+        p_fair_value.PKR_V := v_pd1_macro * v_lgd;
 
         dm.u_log(GC_PACKAGE,'calc_credit_risk_premium/END','Премия за кредитный риск');
     exception
@@ -911,9 +920,12 @@ create or replace package body DM.PKG_FV_CALC as
         ,p_balance_debt_amt number -- Балансовая величина задолженности, руб.
         ,p_market_value_amt number --  Рыночная стоимость имущества
         ,p_proceed_amt number -- Выручка, млн. RUB без НДС за последний календарный год
+        ,p_other_spread number -- Прочие спреды
+        ,p_other_spread_comment varchar2 -- Комментарий к прочим спредам
     ) is
         v_fair_value t_Fair_Value;
         v_fv_max_term number;
+        v_file_id number;
 
         procedure init_fair_record is
         begin
@@ -937,7 +949,43 @@ create or replace package body DM.PKG_FV_CALC as
             v_fair_value.balance_debt_amt := p_balance_debt_amt;
             v_fair_value.market_value_amt := p_market_value_amt;
             v_fair_value.proceed_amt := p_proceed_amt;
+            v_fair_value.other_spread := p_other_spread;
+            v_fair_value.other_spread_comment := p_other_spread_comment;
             insert_fair(v_fair_value);
+        end;
+
+        procedure init_log_apex is
+        begin
+            v_file_id := etl.sq_input_file.nextval;
+            insert into ETL.LOAD_LOG_APEX(FILE_ID, USER_NAM, SNAPSHOT_DT, START_DT, END_DT, STATUS_DESC, STATUS_CD, FILE_NAME,
+                                          FILE_SHORT_NAME, FILE_TYPE_CD, BLOB_CONTENT, MIME_TYPE, PARAM_1, PARAM_2, PARAM_3)
+            select v_file_id as FILE_ID,
+                        user as USER_NAM,
+                        sysdate  as SNAPSHOT_DT,
+                        sysdate as START_DT,
+                null as END_DT,
+                'Витрина рассчитывается' as STATUS_DESC,
+                '1' as STATUS_CD,
+                null as FILE_NAME,
+                null as FILE_SHORT_NAME,
+                'DM_FAIR_VALUE' as FILE_TYPE_CD,
+                null as BLOB_CONTENT,
+                null as MIME_TYPE,
+                null as PARAM_1,
+                null as PARAM_2,
+                null as PARAM_3
+            from dual;
+            commit;
+        end;
+
+        procedure update_log_apex is
+        begin
+            update ETL.LOAD_LOG_APEX
+            set END_DT = sysdate,
+                STATUS_DESC = 'Витрина успешно рассчитана',
+                STATUS_CD = '3'
+            where FILE_ID = v_file_id;
+            commit;
         end;
     begin
         gv_exc_flag := 'Y'; -- initial value for single run
@@ -945,18 +993,14 @@ create or replace package body DM.PKG_FV_CALC as
                                                                                ||' пользователь '||user);
         dbms_application_info.set_module(module_name => GC_PACKAGE, action_name => 'main');
         dbms_application_info.set_client_info(client_info => to_char(p_snapshot_dt,'yyyy-mm-dd'));
-
-        --validate_mandatory;
+        init_log_apex;
         init_fair_record;
-        -------log Запуск расчета id date params;
-        -------load repayment schedule;
 
         -- Если [Срок сделки] превышает хотя бы один максимальный срок
         v_fv_max_term := get_over_fv_max_term(v_fair_value);
         if not v_fv_max_term is null then
             v_fair_value.comment := 'Для сделок более '||v_fv_max_term||' дн. необходимо индивидуально согласование с Казначейством';
         end if;
-
         -- Расчет кривой FTP (Трансфертной ставки)
         calc_ftp(v_fair_value);
         -- Казначейские спреды (надбавки за право досрочного погашения, отмену индикаторов и фиксацию ставки на период выборки)
@@ -971,7 +1015,7 @@ create or replace package body DM.PKG_FV_CALC as
         calc_administrative_expense(v_fair_value);
 
         update_fair_result(v_fair_value);
-
+        update_log_apex;
         dm.u_log(GC_PACKAGE,'main/END','Расчет сформирован CALCULATION_ID='||v_fair_value.calculation_id);
     exception
         when others then

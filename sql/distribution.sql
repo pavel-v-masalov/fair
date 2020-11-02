@@ -9,3 +9,10 @@ DM.PKG_FV_CALC.normal_inv_cumulative_distrib(0.908789) inv
 ,DM.PKG_FV_CALC.normal_distribution(1.333333) norm
 ,DM.PKG_FV_CALC.normal_cumulative_distribution(1.333333) cum_norm
 from dual;
+
+
+DM.FAIR_VALUE
+
+create sequence sq_input_file
+
+GRANT ALL PRIVILEGES TO DM;
