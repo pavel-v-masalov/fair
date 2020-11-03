@@ -385,7 +385,7 @@ create or replace package body DM.PKG_FV_CALC as
             other_spread_comment
         )
         values (
-            DM.FAIR_VALUE_SEQ.nextval,
+            p_fair_value.calculation_id,
             sysdate,
             p_fair_value.snapshot_dt,
             p_fair_value.client_name,
@@ -607,21 +607,11 @@ create or replace package body DM.PKG_FV_CALC as
         when others then dm.u_log(GC_PACKAGE,'calc_ftp/error','Ошибка в "Расчёт кривой FTP" '||sqlerrm); gv_exc_flag := 'N'; raise;
     end;
 
-    -- Компенсирующий спред и комиссия за досрочное погашение
-    procedure c_t_s_advanced_repayment(p_fair_value in out nocopy t_fair_value) is
-    begin
-        dbms_application_info.set_action(action_name => 'c_t_s_advanced_repayment');
-        dm.u_log(GC_PACKAGE,'c_t_s_advanced_repayment/BEGIN','Компенсирующий спред и комиссия за досрочное погашение');
-        dm.u_log(GC_PACKAGE,'c_t_s_advanced_repayment/END','Компенсирующий спред и комиссия за досрочное погашение');
-    exception
-        when others then dm.u_log(GC_PACKAGE,'c_t_s_advanced_repayment/error','Ошибка в "Компенсирующий спред и комиссия за досрочное погашение" '||sqlerrm); gv_exc_flag := 'N'; raise;
-    end;
-
     -- Расчет варианта Спред+комиссия
-    procedure c_t_s_commission(p_fair_value in out nocopy t_fair_value) is
+    procedure c_t_s_arp_commission(p_fair_value in out nocopy t_fair_value) is
     begin
-        dbms_application_info.set_action(action_name => 'c_t_s_commission');
-        dm.u_log(GC_PACKAGE,'c_t_s_commission/BEGIN','Расчет варианта Спред+комиссия');
+        dbms_application_info.set_action(action_name => 'c_t_s_arp_commission');
+        dm.u_log(GC_PACKAGE,'c_t_s_arp_commission/BEGIN','Расчет варианта Спред+комиссия');
         p_fair_value.early_spread_v := nvl(get_treasury_spread(p_fair_value, 'EARLY_REPAYMENT'), p_fair_value.early_spread_v);
 
         insert into DM.FV_COMISSIONS (calculation_id, period_name, comission_amt)
@@ -634,23 +624,44 @@ create or replace package body DM.PKG_FV_CALC as
            and p_fair_value.term_amt between INTERVAL1_DAYS_FROM and INTERVAL1_DAYS_TO
            and VALID_TO_DTTM = GC_EOW and p_fair_value.SNAPSHOT_DT between START_DT and END_DT;
 
-        dm.u_log(GC_PACKAGE,'c_t_s_commission/END','Расчет варианта Спред+комиссия');
+        dm.u_log(GC_PACKAGE,'c_t_s_arp_commission/END','Расчет варианта Спред+комиссия');
     exception
-        when others then dm.u_log(GC_PACKAGE,'c_t_s_commission/error','Ошибка в "Расчет варианта Спред+комиссия" '||sqlerrm); gv_exc_flag := 'N';
+        when others then dm.u_log(GC_PACKAGE,'c_t_s_arp_commission/error','Ошибка в "Расчет варианта Спред+комиссия" '||sqlerrm); gv_exc_flag := 'N';
             raise;
     end;
 
     -- Расчет варианта Мораторий+спред
-    procedure c_t_s_moratorium(p_fair_value in out nocopy t_fair_value) is
+    procedure c_t_s_arp_moratorium(p_fair_value in out nocopy t_fair_value) is
     begin
-        dbms_application_info.set_action(action_name => 'c_t_s_moratorium');
-        dm.u_log(GC_PACKAGE,'c_t_s_moratorium/BEGIN','Расчет варианта Мораторий+спред');
+        dbms_application_info.set_action(action_name => 'c_t_s_arp_moratorium');
+        dm.u_log(GC_PACKAGE,'c_t_s_arp_moratorium/BEGIN','Расчет варианта Мораторий+спред');
         p_fair_value.early_spread_v :=
             nvl(get_treasury_spread(p_fair_value, 'EARLY_REPAYMENT_MORATORY', p_fair_value.moratory_term_amt), p_fair_value.early_spread_v);
-        dm.u_log(GC_PACKAGE,'c_t_s_moratorium/END','Расчет варианта Мораторий+спред');
+        dm.u_log(GC_PACKAGE,'c_t_s_arp_moratorium/END','Расчет варианта Мораторий+спред');
     exception
-        when others then dm.u_log(GC_PACKAGE,'c_t_s_moratorium/error','Ошибка в "Расчет варианта Мораторий+спред" '||sqlerrm); gv_exc_flag := 'N';
+        when others then dm.u_log(GC_PACKAGE,'c_t_s_arp_moratorium/error','Ошибка в "Расчет варианта Мораторий+спред" '||sqlerrm); gv_exc_flag := 'N';
             raise;
+    end;
+
+    -- Компенсирующий спред и комиссия за досрочное погашение
+    procedure c_t_s_advanced_repayment(p_fair_value in out nocopy t_fair_value) is
+    begin
+        dbms_application_info.set_action(action_name => 'c_t_s_advanced_repayment');
+        dm.u_log(GC_PACKAGE,'c_t_s_advanced_repayment/BEGIN','Компенсирующий спред и комиссия за досрочное погашение');
+
+        if p_fair_value.early_spread_type_key is null then
+            p_fair_value.early_spread_v := 0;
+        elsif p_fair_value.early_spread_type_key = 1 then -- Спред + комиссия
+            -- Расчет варианта Спред+комиссия
+            c_t_s_arp_commission(p_fair_value);
+        elsif p_fair_value.early_spread_type_key = 2 then -- Мораторий + спред
+            -- Расчет варианта Мораторий+спред
+            c_t_s_arp_moratorium(p_fair_value);
+        end if;
+
+        dm.u_log(GC_PACKAGE,'c_t_s_advanced_repayment/END','Компенсирующий спред и комиссия за досрочное погашение');
+    exception
+        when others then dm.u_log(GC_PACKAGE,'c_t_s_advanced_repayment/error','Ошибка в "Компенсирующий спред и комиссия за досрочное погашение" '||sqlerrm); gv_exc_flag := 'N'; raise;
     end;
 
     -- Комиссия за обязательство
@@ -725,19 +736,10 @@ create or replace package body DM.PKG_FV_CALC as
 
         -- Компенсирующий спред и комиссия за досрочное погашение
         c_t_s_advanced_repayment(p_fair_value);
-
-        -- Расчет варианта Спред+комиссия
-        c_t_s_commission(p_fair_value);
-
-        -- Расчет варианта Мораторий+спред
-        c_t_s_moratorium(p_fair_value);
-
         -- Комиссия за обязательство
         c_t_s_commission_liability(p_fair_value);
-
         -- Компенсирующий спред за фиксацию ставки
         c_t_s_fixation_rate(p_fair_value);
-
         -- Компенсирующий спред за отмену/отсутствие индикаторов
         c_t_s_compensate_indicator(p_fair_value);
 
@@ -925,7 +927,6 @@ create or replace package body DM.PKG_FV_CALC as
     ) is
         v_fair_value t_Fair_Value;
         v_fv_max_term number;
-        v_file_id number;
 
         procedure init_fair_record is
         begin
@@ -956,12 +957,12 @@ create or replace package body DM.PKG_FV_CALC as
 
         procedure init_log_apex is
         begin
-            v_file_id := etl.sq_input_file.nextval;
+            v_fair_value.calculation_id := etl.sq_input_file.nextval;
             insert into ETL.LOAD_LOG_APEX(FILE_ID, USER_NAM, SNAPSHOT_DT, START_DT, END_DT, STATUS_DESC, STATUS_CD, FILE_NAME,
                                           FILE_SHORT_NAME, FILE_TYPE_CD, BLOB_CONTENT, MIME_TYPE, PARAM_1, PARAM_2, PARAM_3)
-            select v_file_id as FILE_ID,
-                        user as USER_NAM,
-                        sysdate  as SNAPSHOT_DT,
+            select v_fair_value.calculation_id as FILE_ID,
+                        v('APP_USER') as USER_NAM,
+                        p_snapshot_dt  as SNAPSHOT_DT,
                         sysdate as START_DT,
                 null as END_DT,
                 'Витрина рассчитывается' as STATUS_DESC,
@@ -984,7 +985,7 @@ create or replace package body DM.PKG_FV_CALC as
             set END_DT = sysdate,
                 STATUS_DESC = 'Витрина успешно рассчитана',
                 STATUS_CD = '3'
-            where FILE_ID = v_file_id;
+            where FILE_ID = v_fair_value.calculation_id;
             commit;
         end;
     begin
