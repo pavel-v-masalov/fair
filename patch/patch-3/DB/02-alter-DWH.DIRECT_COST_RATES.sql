@@ -1,0 +1,2 @@
+alter table DWH.DIRECT_COST_RATES drop constraint DIRECT_COST_RATES_UK01 cascade;
+create unique index DWH.DIRECT_COST_RATES_I01 on DWH.DIRECT_COST_RATES (VALID_TO_DTTM, START_DT, END_DT) compress 1;

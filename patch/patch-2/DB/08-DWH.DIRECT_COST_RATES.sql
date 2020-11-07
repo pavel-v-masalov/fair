@@ -1,0 +1,3 @@
+prompt Importing table DWH.DIRECT_COST_RATES...
+insert into DWH.DIRECT_COST_RATES (DIRECT_COST_RATE, START_DT, END_DT, VALID_FROM_DTTM, VALID_TO_DTTM, USERNAME)
+values (0.0009, to_date('01-01-2020', 'dd-mm-yyyy'), to_date('01-01-2400', 'dd-mm-yyyy'), to_date('01-01-2020', 'dd-mm-yyyy'), to_date('01-01-2400', 'dd-mm-yyyy'), 'AAY04VABJAACDtbAAA');

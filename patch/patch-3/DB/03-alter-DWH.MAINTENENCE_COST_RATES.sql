@@ -1,0 +1,4 @@
+alter table DWH.MAINTENENCE_COST_RATES add username varchar2(100);
+alter table DWH.MAINTENENCE_COST_RATES drop constraint MAINTENENCE_COST_RATES_UK01 cascade;
+create unique index DWH.MAINTENENCE_COST_RATES_I01 on DWH.MAINTENENCE_COST_RATES (VALID_TO_DTTM, START_DT, END_DT) compress 1;
+
