@@ -1,0 +1,5 @@
+select * from PVECHKILEVA.TREASURY_SPREAD
+order by TREASURY_SPREAD_TYPE, CURRENCY_LETTER_CD,	FIXFLOAT,	CONTRACTS_TERMS_KEY, interval1_days_from, interval2_days_from;
+
+select * from DWH.TREASURY_SPREAD
+order by TREASURY_SPREAD_TYPE, CURRENCY_LETTER_CD,	FIXFLOAT,	CONTRACTS_TERMS_KEY, interval1_days_from, interval2_days_from;
