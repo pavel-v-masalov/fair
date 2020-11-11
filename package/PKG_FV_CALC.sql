@@ -996,6 +996,10 @@ create or replace package body DM.PKG_FV_CALC as
         dbms_application_info.set_client_info(client_info => to_char(p_snapshot_dt,'yyyy-mm-dd'));
         init_log_apex;
         init_fair_record;
+        if not p_schedule_file_name is null then
+            dm.PKG_FV_LOAD.SCHEDULES_main(p_file_id => v_fair_value.calculation_id
+                                          , p_file_name => p_schedule_file_name);
+        end if;
 
         -- Если [Срок сделки] превышает хотя бы один максимальный срок
         v_fv_max_term := get_over_fv_max_term(v_fair_value);
