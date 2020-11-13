@@ -27,6 +27,9 @@ create or replace package DM.PKG_FV_CALC as
                 ,p_proceed_amt number -- Выручка, млн. RUB без НДС за последний календарный год
                 ,p_other_spread number -- Прочие спреды
                 ,p_other_spread_comment varchar2 -- Комментарий к прочим спредам
+                ,p_msfo_balance_debt_amt number -- Задолженность по графику МСФО
+                ,p_comission_amt number -- Комиссия за организацию сделки
+
     );
 
 end;
@@ -382,7 +385,9 @@ create or replace package body DM.PKG_FV_CALC as
             market_value_amt,
             proceed_amt,
             other_spread,
-            other_spread_comment
+            other_spread_comment,
+            msfo_balance_debt_amt,
+            comission_amt
         )
         values (
             p_fair_value.calculation_id,
@@ -408,7 +413,9 @@ create or replace package body DM.PKG_FV_CALC as
             p_fair_value.market_value_amt,
             p_fair_value.proceed_amt,
             p_fair_value.other_spread,
-            p_fair_value.other_spread_comment
+            p_fair_value.other_spread_comment,
+            p_fair_value.msfo_balance_debt_amt,
+            p_fair_value.comission_amt
         )
         return CALCULATION_ID, report_dt into p_fair_value.calculation_id, p_fair_value.report_dt;
         commit;
@@ -435,7 +442,8 @@ create or replace package body DM.PKG_FV_CALC as
                CNCL_SPREAD_V = p_fair_value.CNCL_SPREAD_V,
                FULL_CNCL_SPREAD_V = p_fair_value.FULL_CNCL_SPREAD_V,
                TERM_CNCL_SPREAD_V = p_fair_value.TERM_CNCL_SPREAD_V,
-               ONE_CNCL_SPREAD_V = p_fair_value.ONE_CNCL_SPREAD_V
+               ONE_CNCL_SPREAD_V = p_fair_value.ONE_CNCL_SPREAD_V,
+               FV_MSFO_V = p_fair_value.fv_msfo_v
         where CALCULATION_ID = p_fair_value.calculation_id;
     exception
         when others then
@@ -901,6 +909,39 @@ create or replace package body DM.PKG_FV_CALC as
         when others then dm.u_log(GC_PACKAGE,'calc_administrative_expense/error','Ошибка в расчёте "Административно-хозяйственные расходы" '||sqlerrm); gv_exc_flag := 'N'; raise;
     end;
 
+    -- Справедливая эффективная ставка МСФО
+    procedure calc_msfo_efficient_rate(p_fair_value in out nocopy t_fair_value) is
+        v_commission number;
+        v_fv_msfo_rate number;
+        v_client_rate number;
+    begin
+        dbms_application_info.set_action(action_name => 'calc_msfo_efficient_rate');
+        dm.u_log(GC_PACKAGE,'calc_msfo_efficient_rate/BEGIN','Справедливая эффективная ставка МСФО');
+        v_commission := p_fair_value.comission_amt / p_fair_value.msfo_balance_debt_amt;
+        select fv_msfo_rate
+          into v_fv_msfo_rate
+          from DWH.FV_MSFO_RATES
+         where comission_rate = v_commission
+           and term_year = round(p_fair_value.term_amt/365)
+           and VALID_TO_DTTM = GC_EOW and p_fair_value.SNAPSHOT_DT between START_DT and END_DT;
+
+        v_client_rate := nvl(p_fair_value.ftp_v, 0) -- Трансфертная ставка (FTP) п. 4.4.1
+                         -- Компенсирующие спреды – сумма спредов п. 4.4.2:
+                         + nvl(p_fair_value.early_spread_v, 0) -- Спред за досрочное погашение
+                         + nvl(p_fair_value.cncl_spread_v, 0) -- Спред за фиксацию ставки
+                         + nvl(p_fair_value.full_cncl_spread_v, 0) -- Спред за отсутствие/полную отмену индикаторов
+                         + nvl(p_fair_value.term_cncl_spread_v, 0) -- Спред за отмену индикаторов на неполный срок
+                         + nvl(p_fair_value.one_cncl_spread_v, 0) -- Спреды за отмену одного индикатора
+                         + nvl(p_fair_value.pec_v, 0) -- Плата за экономический капитал п. 4.4.3
+                         + nvl(p_fair_value.pkr_v, 0) -- Премия за кредитный риск п 4.4.4
+                         + nvl(p_fair_value.maintenence_costs_v, 0) -- Надбавка АХР п. 4.4.6
+                         + nvl(p_fair_value.direct_costs_v, 0); -- Надбавка на прямые расходы п. 4.4.5
+        p_fair_value.fv_msfo_v := v_commission * v_fv_msfo_rate + v_client_rate + .01;
+        dm.u_log(GC_PACKAGE,'calc_msfo_efficient_rate/END','Справедливая эффективная ставка МСФО');
+    exception
+        when others then dm.u_log(GC_PACKAGE,'calc_msfo_efficient_rate/error','Ошибка в расчёте "Справедливая эффективная ставка МСФО" '||sqlerrm); gv_exc_flag := 'N'; raise;
+    end;
+
     procedure main(
         p_snapshot_dt date default trunc(sysdate) -- Дата расчета (на какую дату запускается расчет)
         ,p_client_name varchar2 --Лизингополучатель
@@ -924,6 +965,8 @@ create or replace package body DM.PKG_FV_CALC as
         ,p_proceed_amt number -- Выручка, млн. RUB без НДС за последний календарный год
         ,p_other_spread number -- Прочие спреды
         ,p_other_spread_comment varchar2 -- Комментарий к прочим спредам
+        ,p_msfo_balance_debt_amt number -- Задолженность по графику МСФО
+        ,p_comission_amt number -- Комиссия за организацию сделки
     ) is
         v_fair_value t_Fair_Value;
         v_fv_max_term number;
@@ -952,6 +995,8 @@ create or replace package body DM.PKG_FV_CALC as
             v_fair_value.proceed_amt := p_proceed_amt;
             v_fair_value.other_spread := p_other_spread;
             v_fair_value.other_spread_comment := p_other_spread_comment;
+            v_fair_value.msfo_balance_debt_amt := p_msfo_balance_debt_amt;
+            v_fair_value.comission_amt := p_comission_amt;
             insert_fair(v_fair_value);
         end;
 
