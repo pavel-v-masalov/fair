@@ -532,21 +532,21 @@ create or replace package body DM.PKG_FV_CALC as
         cursor cur_rate1 is
             select *
               from DWH.CURRATES
-             where DENJ <= p_fair_value.report_dt
+             where DENJ <= p_fair_value.snapshot_dt
                and RATEPERIOD <= p_rate_period
                and RATENAME = v_rate_name
                and CURR = p_fair_value.currency_letter_cd
-               and VALID_TO_DTTM = GC_EOW and p_fair_value.snapshot_dt between START_DT and END_DT
+               and VALID_TO_DTTM = GC_EOW
             order by denj desc, RATEPERIOD desc;
 
         cursor cur_rate2 is
             select *
             from DWH.CURRATES
-            where DENJ <= p_fair_value.report_dt
+            where DENJ <= p_fair_value.snapshot_dt
               and RATEPERIOD > p_rate_period
               and RATENAME = v_rate_name
               and CURR = p_fair_value.currency_letter_cd
-              and VALID_TO_DTTM = GC_EOW and p_fair_value.snapshot_dt between START_DT and END_DT
+              and VALID_TO_DTTM = GC_EOW
             order by denj desc, RATEPERIOD asc;
 
     begin
@@ -571,7 +571,7 @@ create or replace package body DM.PKG_FV_CALC as
             if cur_rate2%isopen then close cur_rate2; end if;
             dm.u_log(GC_PACKAGE,'get_currates/error',
                      'Ошибка при получении DWH.CURRATES по RATEPERIOD='||p_rate_period
-                         ||' DENJ<='||p_fair_value.report_dt
+                         ||' DENJ<='||p_fair_value.snapshot_dt
                          ||' RATENAME='||v_rate_name
                          ||' CURR='||p_fair_value.currency_letter_cd
                          ||' '||sqlerrm);
@@ -653,20 +653,30 @@ create or replace package body DM.PKG_FV_CALC as
 
     -- Компенсирующий спред и комиссия за досрочное погашение
     procedure c_t_s_advanced_repayment(p_fair_value in out nocopy t_fair_value) is
+        v_fv_max_term number;
+        procedure i_do_calc is
+        begin
+            if p_fair_value.early_spread_type_key is null then
+                p_fair_value.early_spread_v := 0;
+            else
+                v_fv_max_term := get_over_fv_max_term(p_fair_value, 'EARLY_SPREAD'); -- Спред за досрочное погашение
+                if not v_fv_max_term is null then
+                    p_fair_value.early_spread_v := v_fv_max_term;
+                    return;
+                end if;
+                if p_fair_value.early_spread_type_key = 1 then -- Спред + комиссия
+                    -- Расчет варианта Спред+комиссия
+                    c_t_s_arp_commission(p_fair_value);
+                elsif p_fair_value.early_spread_type_key = 2 then -- Мораторий + спред
+                    -- Расчет варианта Мораторий+спред
+                    c_t_s_arp_moratorium(p_fair_value);
+                end if;
+            end if;
+        end;
     begin
         dbms_application_info.set_action(action_name => 'c_t_s_advanced_repayment');
         dm.u_log(GC_PACKAGE,'c_t_s_advanced_repayment/BEGIN','Компенсирующий спред и комиссия за досрочное погашение');
-
-        if p_fair_value.early_spread_type_key is null then
-            p_fair_value.early_spread_v := 0;
-        elsif p_fair_value.early_spread_type_key = 1 then -- Спред + комиссия
-            -- Расчет варианта Спред+комиссия
-            c_t_s_arp_commission(p_fair_value);
-        elsif p_fair_value.early_spread_type_key = 2 then -- Мораторий + спред
-            -- Расчет варианта Мораторий+спред
-            c_t_s_arp_moratorium(p_fair_value);
-        end if;
-
+        i_do_calc;
         dm.u_log(GC_PACKAGE,'c_t_s_advanced_repayment/END','Компенсирующий спред и комиссия за досрочное погашение');
     exception
         when others then dm.u_log(GC_PACKAGE,'c_t_s_advanced_repayment/error','Ошибка в "Компенсирующий спред и комиссия за досрочное погашение" '||sqlerrm); gv_exc_flag := 'N'; raise;
@@ -677,10 +687,10 @@ create or replace package body DM.PKG_FV_CALC as
     begin
         dbms_application_info.set_action(action_name => 'c_t_s_commission_liability');
         dm.u_log(GC_PACKAGE,'c_t_s_commission_liability/BEGIN','Комиссия за обязательство');
-        p_fair_value.revenue_comission_v := get_treasury_spread(p_fair_value, 'REVENUE_COMISSIONS');
+        p_fair_value.revenue_comission_v := get_treasury_spread(p_fair_value, 'REVENUE_COMISSIONS', p_fair_value.use_period_amt);
         dm.u_log(GC_PACKAGE,'c_t_s_commission_liability/END','Комиссия за обязательство');
     exception
-        when others then dm.u_log(GC_PACKAGE,'calc_ftp/error','Ошибка в "Комиссия за обязательство" '||sqlerrm); gv_exc_flag := 'N'; raise;
+        when others then dm.u_log(GC_PACKAGE,'c_t_s_commission_liability/error','Ошибка в "Комиссия за обязательство" '||sqlerrm); gv_exc_flag := 'N'; raise;
     end;
 
     -- Компенсирующий спред за фиксацию ставки
@@ -694,10 +704,10 @@ create or replace package body DM.PKG_FV_CALC as
             end if;
             v_fv_max_term := get_over_fv_max_term(p_fair_value, 'FIX_SPREAD'); -- Спред за фиксацию
             if not v_fv_max_term is null then
-                p_fair_value.cncl_spread_v := v_fv_max_term;
+                p_fair_value.fix_spread_v := v_fv_max_term;
                 return;
             end if;
-            p_fair_value.cncl_spread_v := get_treasury_spread(p_fair_value, 'FIX_RATE', p_fair_value.fix_period_amt);
+            p_fair_value.fix_spread_v := get_treasury_spread(p_fair_value, 'FIX_RATE', p_fair_value.fix_period_amt);
         end;
     begin
         dbms_application_info.set_action(action_name => 'c_t_s_fixation_rate');
