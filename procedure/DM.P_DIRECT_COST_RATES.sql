@@ -5,7 +5,7 @@ create or replace procedure DM.P_DIRECT_COST_RATES (
     GC_EOW_D constant date := date '2400-01-01'; -- end of world
     v_now_d date := trunc(sysdate);
     v_close_d date := v_now_d - 1;
-    v_user varchar2(100) := v('APP_USER');
+    v_user varchar2(100) := nvl(v('APP_USER'),user);
     type t_rowids is table of rowid;
     v_rowids t_rowids;
 
@@ -14,7 +14,7 @@ create or replace procedure DM.P_DIRECT_COST_RATES (
         insert into ETL.LOAD_LOG_APEX(FILE_ID, USER_NAM, SNAPSHOT_DT, START_DT, END_DT, STATUS_DESC, STATUS_CD, FILE_NAME,
                                       FILE_SHORT_NAME, FILE_TYPE_CD, BLOB_CONTENT, MIME_TYPE, PARAM_1, PARAM_2, PARAM_3)
         select etl.sq_input_file.nextval,
-               v('APP_USER') as USER_NAM,
+               v_user as USER_NAM,
                p_start_dt  as SNAPSHOT_DT,
                sysdate as START_DT,
             sysdate as END_DT,
