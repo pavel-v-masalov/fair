@@ -4,16 +4,18 @@ create or replace procedure DM.P_ROE (
 ) is
     GC_EOW_D constant date := date '2400-01-01'; -- end of world
     v_now_d date := trunc(sysdate);
-    v_close_d date := v_now_d - 1;
+    v_close_d date := v_now_d;
     v_user varchar2(100) := nvl(v('APP_USER'),user);
     type t_rowids is table of rowid;
     v_rowids t_rowids;
+    v_file_id number;
 
     procedure insert_log_apex is
     begin
+        v_file_id := etl.sq_input_file.nextval;
         insert into ETL.LOAD_LOG_APEX(FILE_ID, USER_NAM, SNAPSHOT_DT, START_DT, END_DT, STATUS_DESC, STATUS_CD, FILE_NAME,
                                       FILE_SHORT_NAME, FILE_TYPE_CD, BLOB_CONTENT, MIME_TYPE, PARAM_1, PARAM_2, PARAM_3)
-        select etl.sq_input_file.nextval,
+        select v_file_id,
                v_user as USER_NAM,
                p_start_dt  as SNAPSHOT_DT,
                sysdate as START_DT,
@@ -47,8 +49,8 @@ begin
      where START_DT < p_start_dt and END_DT >= p_start_dt and VALID_TO_DTTM = GC_EOW_D
     returning rowid bulk collect into v_rowids;
     forall i in 1..v_rowids.count
-        insert into DWH.ROE(ROE, START_DT, END_DT, VALID_FROM_DTTM, VALID_TO_DTTM, USERNAME)
-        select ROE, START_DT, p_start_dt - 1, v_now_d, GC_EOW_D, v_user
+        insert into DWH.ROE(ROE, START_DT, END_DT, VALID_FROM_DTTM, VALID_TO_DTTM, FILE_ID)
+        select ROE, START_DT, p_start_dt - 1, v_now_d, GC_EOW_D, FILE_ID
           from DWH.ROE
          where rowid = v_rowids(i);
 
@@ -57,13 +59,13 @@ begin
                     END_DT,
                     VALID_FROM_DTTM,
                     VALID_TO_DTTM,
-                    USERNAME)
+                    FILE_ID)
     values ( p_roe,
              p_start_dt,
              GC_EOW_D,
              v_now_d,
              GC_EOW_D,
-             v_user);
+             v_file_id);
     commit;
 exception
     when others then dm.u_log('procedure','P_ROE/error','Ошибка '||sqlerrm); raise;

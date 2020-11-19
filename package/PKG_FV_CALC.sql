@@ -8,7 +8,6 @@ create or replace package DM.PKG_FV_CALC as
                 p_snapshot_dt date default trunc(sysdate) -- Дата расчета (на какую дату запускается расчет)
                 ,p_client_name varchar2 --Лизингополучатель
                 ,p_term_amt number -- Срок сделки
-                ,p_total_sum number -- Сумма сделки
                 ,p_rating_model_key number -- Ключ рейтинговой модели
                 ,p_rating_nam varchar2 -- Рейтинг
                 ,p_leasing_subject_type_cd varchar2 -- Типа лизингового имущества
@@ -367,7 +366,6 @@ create or replace package body DM.PKG_FV_CALC as
             snapshot_dt,
             client_name,
             term_amt,
-            total_sum,
             rating_model_key,
             rating_nam,
             leasing_subject_type_cd,
@@ -395,7 +393,6 @@ create or replace package body DM.PKG_FV_CALC as
             p_fair_value.snapshot_dt,
             p_fair_value.client_name,
             p_fair_value.term_amt,
-            p_fair_value.total_sum,
             p_fair_value.rating_model_key,
             p_fair_value.rating_nam,
             p_fair_value.leasing_subject_type_cd,
@@ -527,40 +524,38 @@ create or replace package body DM.PKG_FV_CALC as
     end;
 
     procedure get_currates(p_fair_value t_fair_value, p_rate_period number, p_currate1 out t_currate, p_currate2 out t_currate) is
-        v_rate_name varchar2(30) := 'ars'||p_fair_value.fixfloat;
-
         cursor cur_rate1 is
             select *
               from DWH.CURRATES
-             where DENJ <= p_fair_value.snapshot_dt
-               and RATEPERIOD <= p_rate_period
-               and RATENAME = v_rate_name
-               and CURR = p_fair_value.currency_letter_cd
+             where report_dt <= p_fair_value.snapshot_dt
+               and day_cnt <= p_rate_period
+               and fixfloat = p_fair_value.fixfloat
+               and currency_letter_cd = p_fair_value.currency_letter_cd
                and VALID_TO_DTTM = GC_EOW
-            order by denj desc, RATEPERIOD desc;
+            order by report_dt desc, day_cnt desc;
 
         cursor cur_rate2 is
             select *
             from DWH.CURRATES
-            where DENJ <= p_fair_value.snapshot_dt
-              and RATEPERIOD > p_rate_period
-              and RATENAME = v_rate_name
-              and CURR = p_fair_value.currency_letter_cd
+            where report_dt <= p_fair_value.snapshot_dt
+              and day_cnt > p_rate_period
+              and fixfloat = p_fair_value.fixfloat
+              and currency_letter_cd = p_fair_value.currency_letter_cd
               and VALID_TO_DTTM = GC_EOW
-            order by denj desc, RATEPERIOD asc;
+            order by report_dt desc, day_cnt asc;
 
     begin
         dbms_application_info.set_action(action_name => 'get_currates');
         open cur_rate1;
         fetch cur_rate1 into p_currate1;
-        if p_currate1.denj is null then
+        if p_currate1.report_dt is null then
             raise_application_error(gc_error, 'No data fount for first currate');
         end if;
         close cur_rate1;
 
         open cur_rate2;
         fetch cur_rate2 into p_currate2;
-        if p_currate2.denj is null then
+        if p_currate2.report_dt is null then
             raise_application_error(gc_error, 'No data fount for second currate');
         end if;
         close cur_rate2;
@@ -570,10 +565,10 @@ create or replace package body DM.PKG_FV_CALC as
             if cur_rate1%isopen then close cur_rate1; end if;
             if cur_rate2%isopen then close cur_rate2; end if;
             dm.u_log(GC_PACKAGE,'get_currates/error',
-                     'Ошибка при получении DWH.CURRATES по RATEPERIOD='||p_rate_period
-                         ||' DENJ<='||p_fair_value.snapshot_dt
-                         ||' RATENAME='||v_rate_name
-                         ||' CURR='||p_fair_value.currency_letter_cd
+                     'Ошибка при получении DWH.CURRATES по day_cnt='||p_rate_period
+                         ||' report_dt<='||p_fair_value.snapshot_dt
+                         ||' fixfloat='||p_fair_value.fixfloat
+                         ||' currency_letter_cd='||p_fair_value.currency_letter_cd
                          ||' '||sqlerrm);
             gv_exc_flag := 'N';
             raise;
@@ -597,17 +592,17 @@ create or replace package body DM.PKG_FV_CALC as
             if p_fair_value.ftp_calculation_method_key = 2 then -- WAL
                 with init_date as
                 (
-                    select min(DATE_FROM) init_date_from from DWH.SCHEDULES_FOR_FV where CALCULATION_ID = p_fair_value.calculation_id
+                    select min(DATE_FROM) init_date_from from DWH.SCHEDULES_FV where CALCULATION_ID = p_fair_value.calculation_id
                 )
                 select sum(LOAN_AMT * (DATE_TO - init_date.init_date_from)) / sum(LOAN_AMT)
                   into v_medium_term
-                  from DWH.SCHEDULES_FOR_FV join init_date on 1=1
+                  from DWH.SCHEDULES_FV join init_date on 1=1
                  where CALCULATION_ID = p_fair_value.calculation_id;
             end if;
             v_rate_period := case when v_medium_term is null then p_fair_value.term_amt else v_medium_term end;
             get_currates(p_fair_value, v_rate_period, v_currate1, v_currate2);
-            p_fair_value.ftp_v := (v_currate1.rate * (v_currate2.rateperiod-v_rate_period) + v_currate2.rate * (v_rate_period - v_currate1.rateperiod))
-                                   / (v_currate2.rateperiod - v_currate1.rateperiod);
+            p_fair_value.ftp_v := (v_currate1.rate * (v_currate2.day_cnt-v_rate_period) + v_currate2.rate * (v_rate_period - v_currate1.day_cnt))
+                                   / (v_currate2.day_cnt - v_currate1.day_cnt);
         end if;
 
         dm.u_log(GC_PACKAGE,'calc_ftp/END','Расчет кривой FTP');
@@ -924,39 +919,42 @@ create or replace package body DM.PKG_FV_CALC as
         v_commission number;
         v_fv_msfo_rate number;
         v_client_rate number;
+        cursor cur_msfo_rates(cp_commission number) is
+            select fv_msfo_rate
+              from DWH.FV_MSFO_RATES
+             where comission_rate >= cp_commission
+               and term_year = round(p_fair_value.term_amt/365)
+               and VALID_TO_DTTM = GC_EOW and p_fair_value.SNAPSHOT_DT between START_DT and END_DT
+             order by comission_rate;
     begin
         dbms_application_info.set_action(action_name => 'calc_msfo_efficient_rate');
         dm.u_log(GC_PACKAGE,'calc_msfo_efficient_rate/BEGIN','Справедливая эффективная ставка МСФО');
         v_commission := p_fair_value.comission_amt / p_fair_value.msfo_balance_debt_amt;
-        select fv_msfo_rate
-          into v_fv_msfo_rate
-          from DWH.FV_MSFO_RATES
-         where comission_rate = v_commission
-           and term_year = round(p_fair_value.term_amt/365)
-           and VALID_TO_DTTM = GC_EOW and p_fair_value.SNAPSHOT_DT between START_DT and END_DT;
+        open cur_msfo_rates(v_commission);
+        fetch cur_msfo_rates into v_fv_msfo_rate;
+        close cur_msfo_rates;
 
         v_client_rate := nvl(p_fair_value.ftp_v, 0) -- Трансфертная ставка (FTP) п. 4.4.1
                          -- Компенсирующие спреды – сумма спредов п. 4.4.2:
                          + nvl(p_fair_value.early_spread_v, 0) -- Спред за досрочное погашение
-                         + nvl(p_fair_value.cncl_spread_v, 0) -- Спред за фиксацию ставки
-                         + nvl(p_fair_value.full_cncl_spread_v, 0) -- Спред за отсутствие/полную отмену индикаторов
-                         + nvl(p_fair_value.term_cncl_spread_v, 0) -- Спред за отмену индикаторов на неполный срок
-                         + nvl(p_fair_value.one_cncl_spread_v, 0) -- Спреды за отмену одного индикатора
+                         + nvl(p_fair_value.fix_spread_v, 0) -- Спред за фиксацию ставки
+                         + nvl(p_fair_value.cncl_spread_v, 0) -- Компенсирующий спред за отмену/отсутствие индикаторов
                          + nvl(p_fair_value.pec_v, 0) -- Плата за экономический капитал п. 4.4.3
                          + nvl(p_fair_value.pkr_v, 0) -- Премия за кредитный риск п 4.4.4
                          + nvl(p_fair_value.maintenence_costs_v, 0) -- Надбавка АХР п. 4.4.6
                          + nvl(p_fair_value.direct_costs_v, 0); -- Надбавка на прямые расходы п. 4.4.5
-        p_fair_value.fv_msfo_v := v_commission * v_fv_msfo_rate + v_client_rate + .01;
+        p_fair_value.fv_msfo_v := nvl(v_commission, 0) * nvl(v_fv_msfo_rate, 0) + v_client_rate + .01;
         dm.u_log(GC_PACKAGE,'calc_msfo_efficient_rate/END','Справедливая эффективная ставка МСФО');
     exception
-        when others then dm.u_log(GC_PACKAGE,'calc_msfo_efficient_rate/error','Ошибка в расчёте "Справедливая эффективная ставка МСФО" '||sqlerrm); gv_exc_flag := 'N'; raise;
+        when others then
+            if cur_msfo_rates%isopen then close cur_msfo_rates; end if;
+            dm.u_log(GC_PACKAGE,'calc_msfo_efficient_rate/error','Ошибка в расчёте "Справедливая эффективная ставка МСФО" '||sqlerrm); gv_exc_flag := 'N'; raise;
     end;
 
     procedure main(
         p_snapshot_dt date default trunc(sysdate) -- Дата расчета (на какую дату запускается расчет)
         ,p_client_name varchar2 --Лизингополучатель
         ,p_term_amt number -- Срок сделки
-        ,p_total_sum number -- Сумма сделки
         ,p_rating_model_key number -- Ключ рейтинговой модели
         ,p_rating_nam varchar2 -- Рейтинг
         ,p_leasing_subject_type_cd varchar2 -- Типа лизингового имущества
@@ -986,7 +984,6 @@ create or replace package body DM.PKG_FV_CALC as
             v_fair_value.snapshot_dt := p_snapshot_dt;
             v_fair_value.client_name := p_client_name;
             v_fair_value.term_amt := p_term_amt;
-            v_fair_value.total_sum := p_total_sum;
             v_fair_value.rating_model_key := p_rating_model_key;
             v_fair_value.rating_nam := p_rating_nam;
             v_fair_value.leasing_subject_type_cd := p_leasing_subject_type_cd;
@@ -1027,7 +1024,7 @@ create or replace package body DM.PKG_FV_CALC as
                 'DM_FAIR_VALUE' as FILE_TYPE_CD,
                 null as BLOB_CONTENT,
                 null as MIME_TYPE,
-                null as PARAM_1,
+                p_client_name as PARAM_1,
                 null as PARAM_2,
                 null as PARAM_3
             from dual;

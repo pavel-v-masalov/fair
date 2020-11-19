@@ -6,7 +6,3 @@ grant insert on DWH.MAINTENENCE_COST_RATES to DM;
 grant update on DWH.MAINTENENCE_COST_RATES to DM;
 grant insert on DWH.ROE to DM;
 grant update on DWH.ROE to DM;
-
-grant execute on DM.P_ROE to VTBL;
-grant execute on DM.P_MAINTENENCE_COST_RATES to VTBL;
-grant execute on DM.P_DIRECT_COST_RATES to VTBL;
