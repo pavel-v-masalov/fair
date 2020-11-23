@@ -618,7 +618,7 @@ create or replace package body DM.PKG_FV_CALC as
         p_fair_value.early_spread_v := nvl(get_treasury_spread(p_fair_value, 'EARLY_REPAYMENT'), p_fair_value.early_spread_v);
 
         insert into DM.FV_COMISSIONS (calculation_id, period_name, comission_amt)
-        select p_fair_value.calculation_id, INTERVAL2_DAYS_TO - INTERVAL2_DAYS_FROM, VALUE
+        select p_fair_value.calculation_id, to_char(INTERVAL2_DAYS_TO)||'-'||to_char(INTERVAL2_DAYS_FROM), VALUE
           from DWH.TREASURY_SPREAD
          where TREASURY_SPREAD_TYPE = 'EARLY_REPAYMENT_COMISSION'
            and CURRENCY_LETTER_CD = p_fair_value.currency_letter_cd
@@ -942,7 +942,8 @@ create or replace package body DM.PKG_FV_CALC as
                          + nvl(p_fair_value.pec_v, 0) -- Плата за экономический капитал п. 4.4.3
                          + nvl(p_fair_value.pkr_v, 0) -- Премия за кредитный риск п 4.4.4
                          + nvl(p_fair_value.maintenence_costs_v, 0) -- Надбавка АХР п. 4.4.6
-                         + nvl(p_fair_value.direct_costs_v, 0); -- Надбавка на прямые расходы п. 4.4.5
+                         + nvl(p_fair_value.direct_costs_v, 0) -- Надбавка на прямые расходы п. 4.4.5
+                         + nvl(p_fair_value.other_spread, 0); -- Прочие спреды
         p_fair_value.fv_msfo_v := nvl(v_commission, 0) * nvl(v_fv_msfo_rate, 0) + v_client_rate + .01;
         dm.u_log(GC_PACKAGE,'calc_msfo_efficient_rate/END','Справедливая эффективная ставка МСФО');
     exception

@@ -31,3 +31,4 @@ select *
    and RAT_ON_DATE = 'A1'
    and VALID_TO_DTTM = date '2400-01-01' and date '2020-06-03' between ST_DATE and END_DATE;
      
+Dm.fv_comission 

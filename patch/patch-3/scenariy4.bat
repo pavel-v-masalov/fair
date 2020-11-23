@@ -5,6 +5,7 @@ echo col spoolname new_value spoolname > install_file.sql
 echo select 'insatlldb_'^|^|to_char(sysdate, 'yymmdd')^|^|'.log' spoolname from dual;  >> install_file.sql
 echo spool '^&spoolname' >> install_file.sql
 echo set define off >> install_file.sql
+echo set SQLBLANKLINES ON >> install_file.sql
 
 subst v: "%~dp0"DB
 for  /R "v:"  %%A in (*.sql ) do (
