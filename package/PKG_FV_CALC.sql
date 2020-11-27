@@ -1071,6 +1071,8 @@ create or replace package body DM.PKG_FV_CALC as
         calc_direct_expenses(v_fair_value);
         -- Административно-хозяйственные расходы
         calc_administrative_expense(v_fair_value);
+        -- Справедливая эффективная ставка МСФО
+        calc_msfo_efficient_rate(v_fair_value);
 
         update_fair_result(v_fair_value);
         update_log_apex;
