@@ -46,6 +46,7 @@ create or replace package body DM.PKG_FV_CALC as
     GC_INFINITY constant number := 9999999999999999999999999999999999999999999999999999999999999; -- 1.0 / 0.0
 
     gv_exc_flag char(1) := 'Y'; --Исключение не обработано?
+    gv_calculation_id number := null;
 
     -- org.apache.commons.math3.special.Gamma
     INV_GAMMA1P_M1_A0 constant number := .611609510448141581788E-08;
@@ -450,6 +451,29 @@ create or replace package body DM.PKG_FV_CALC as
             raise;
     end;
 
+
+    procedure error_log_detail_apex(p_text varchar2, p_detail varchar2) is
+    begin
+        insert into ETL.load_log_detail_apex (LOG_DETAIL_KEY,
+                                      FILE_ID,
+                                      ROW_NUMBER,
+                                      CODE,
+                                      TEXT,
+                                      DESCRIPTION,
+                                      ERROR_FLG,
+                                      VISIBLE)
+        values (ETL.s_load_log_detail_apex.NEXTVAL,
+                gv_calculation_id,
+                null,
+                null,
+                p_text,
+                p_detail,
+                1,
+                1);
+        commit;
+    end;
+
+
     function get_rate_type(p_currency_letter_cd varchar2,
                            p_fixfloat varchar2,
                            p_contracts_terms_key number) return number is
@@ -465,9 +489,13 @@ create or replace package body DM.PKG_FV_CALC as
         return v_currate_type_key;
     exception
         when others then
+            error_log_detail_apex('Ошибка при получении DWH.CURRATE_TYPES',
+                     'CURRENCY_LETTER_CD='''||p_currency_letter_cd
+                     ||''', FIXFLOAT='''||p_fixfloat||''' CONTRACTS_TERMS_KEY='||p_contracts_terms_key||', sqlerrm='
+                     ||sqlerrm);
             dm.u_log(GC_PACKAGE,'get_rate_type/error',
                      'Ошибка при получении DWH.CURRATE_TYPES по CURRENCY_LETTER_CD='''||p_currency_letter_cd
-                     ||''', FIXFLOAT='''||p_fixfloat||''' CONTRACTS_TERMS_KEY='||p_contracts_terms_key
+                     ||''', FIXFLOAT='''||p_fixfloat||''' CONTRACTS_TERMS_KEY='||p_contracts_terms_key||'; sqlerrm='
                      ||sqlerrm);
             gv_exc_flag := 'N';
             raise;
@@ -493,8 +521,10 @@ create or replace package body DM.PKG_FV_CALC as
         return v_value;
     exception
         when others then
+            error_log_detail_apex('Ошибка при получении DWH.TREASURY_SPREAD',
+                                  'TREASURY_SPREAD_TYPE='''||p_treasury_spread_type||'''; sqlerrm='||sqlerrm);
             dm.u_log(GC_PACKAGE,'get_treasury_spread/error',
-                     'Ошибка при получении DWH.TREASURY_SPREAD для TREASURY_SPREAD_TYPE='''||p_treasury_spread_type||''' '
+                     'Ошибка при получении DWH.TREASURY_SPREAD по TREASURY_SPREAD_TYPE='''||p_treasury_spread_type||'''; sqlerrm='
                      ||sqlerrm);
             gv_exc_flag := 'N';
             raise;
@@ -516,9 +546,12 @@ create or replace package body DM.PKG_FV_CALC as
     exception
         when others then
             if cur_max_term%isopen then close cur_max_term; end if;
+            error_log_detail_apex('Ошибка при получении DWH.FV_MAX_TERM',
+                                  'TERM_AMT='||p_fair_value.term_amt
+                         ||case when not p_rate_type_cd is null then ' RATE_TYPE_CD='||p_rate_type_cd end||'; sqlerrm='||sqlerrm);
             dm.u_log(GC_PACKAGE,'get_over_fv_max_term/error',
                      'Ошибка при получении DWH.FV_MAX_TERM по TERM_AMT='||p_fair_value.term_amt
-                         ||case when not p_rate_type_cd is null then ' RATE_TYPE_CD='||p_rate_type_cd end||' '||sqlerrm);
+                         ||case when not p_rate_type_cd is null then ' RATE_TYPE_CD='||p_rate_type_cd end||'; sqlerrm='||sqlerrm);
             gv_exc_flag := 'N';
             raise;
     end;
@@ -564,12 +597,18 @@ create or replace package body DM.PKG_FV_CALC as
         when others then
             if cur_rate1%isopen then close cur_rate1; end if;
             if cur_rate2%isopen then close cur_rate2; end if;
+            error_log_detail_apex('Ошибка при получении DWH.CURRATES',
+                                  'day_cnt='||p_rate_period
+                         ||' report_dt<='||p_fair_value.snapshot_dt
+                         ||' fixfloat='||p_fair_value.fixfloat
+                         ||' currency_letter_cd='||p_fair_value.currency_letter_cd
+                         ||'; sqlerrm='||sqlerrm);
             dm.u_log(GC_PACKAGE,'get_currates/error',
                      'Ошибка при получении DWH.CURRATES по day_cnt='||p_rate_period
                          ||' report_dt<='||p_fair_value.snapshot_dt
                          ||' fixfloat='||p_fair_value.fixfloat
                          ||' currency_letter_cd='||p_fair_value.currency_letter_cd
-                         ||' '||sqlerrm);
+                         ||'; sqlerrm='||sqlerrm);
             gv_exc_flag := 'N';
             raise;
     end;
@@ -607,7 +646,9 @@ create or replace package body DM.PKG_FV_CALC as
 
         dm.u_log(GC_PACKAGE,'calc_ftp/END','Расчет кривой FTP');
     exception
-        when others then dm.u_log(GC_PACKAGE,'calc_ftp/error','Ошибка в "Расчёт кривой FTP" '||sqlerrm); gv_exc_flag := 'N'; raise;
+        when others then
+            error_log_detail_apex('Ошибка в "Расчёт кривой FTP"', 'sqlerrm='||sqlerrm);
+            dm.u_log(GC_PACKAGE,'calc_ftp/error','Ошибка в "Расчёт кривой FTP"; sqlerrm='||sqlerrm); gv_exc_flag := 'N'; raise;
     end;
 
     -- Расчет варианта Спред+комиссия
@@ -629,7 +670,9 @@ create or replace package body DM.PKG_FV_CALC as
 
         dm.u_log(GC_PACKAGE,'c_t_s_arp_commission/END','Расчет варианта Спред+комиссия');
     exception
-        when others then dm.u_log(GC_PACKAGE,'c_t_s_arp_commission/error','Ошибка в "Расчет варианта Спред+комиссия" '||sqlerrm); gv_exc_flag := 'N';
+        when others then
+            error_log_detail_apex('Ошибка в "Расчет варианта Спред+комиссия"', 'sqlerrm='||sqlerrm);
+            dm.u_log(GC_PACKAGE,'c_t_s_arp_commission/error','Ошибка в "Расчет варианта Спред+комиссия"; sqlerrm='||sqlerrm); gv_exc_flag := 'N';
             raise;
     end;
 
@@ -642,7 +685,9 @@ create or replace package body DM.PKG_FV_CALC as
             nvl(get_treasury_spread(p_fair_value, 'EARLY_REPAYMENT_MORATORY', p_fair_value.moratory_term_amt), p_fair_value.early_spread_v);
         dm.u_log(GC_PACKAGE,'c_t_s_arp_moratorium/END','Расчет варианта Мораторий+спред');
     exception
-        when others then dm.u_log(GC_PACKAGE,'c_t_s_arp_moratorium/error','Ошибка в "Расчет варианта Мораторий+спред" '||sqlerrm); gv_exc_flag := 'N';
+        when others then
+            error_log_detail_apex('Ошибка в "Расчет варианта Мораторий+спред"', 'sqlerrm='||sqlerrm);
+            dm.u_log(GC_PACKAGE,'c_t_s_arp_moratorium/error','Ошибка в "Расчет варианта Мораторий+спред"; sqlerrm='||sqlerrm); gv_exc_flag := 'N';
             raise;
     end;
 
@@ -674,7 +719,10 @@ create or replace package body DM.PKG_FV_CALC as
         i_do_calc;
         dm.u_log(GC_PACKAGE,'c_t_s_advanced_repayment/END','Компенсирующий спред и комиссия за досрочное погашение');
     exception
-        when others then dm.u_log(GC_PACKAGE,'c_t_s_advanced_repayment/error','Ошибка в "Компенсирующий спред и комиссия за досрочное погашение" '||sqlerrm); gv_exc_flag := 'N'; raise;
+        when others then
+            error_log_detail_apex('Ошибка в "Компенсирующий спред и комиссия за досрочное погашение"', 'sqlerrm='||sqlerrm);
+            dm.u_log(GC_PACKAGE,'c_t_s_advanced_repayment/error','Ошибка в "Компенсирующий спред и комиссия за досрочное погашение" '||sqlerrm); gv_exc_flag := 'N';
+            raise;
     end;
 
     -- Комиссия за обязательство
@@ -685,7 +733,9 @@ create or replace package body DM.PKG_FV_CALC as
         p_fair_value.revenue_comission_v := get_treasury_spread(p_fair_value, 'REVENUE_COMISSIONS', p_fair_value.use_period_amt);
         dm.u_log(GC_PACKAGE,'c_t_s_commission_liability/END','Комиссия за обязательство');
     exception
-        when others then dm.u_log(GC_PACKAGE,'c_t_s_commission_liability/error','Ошибка в "Комиссия за обязательство" '||sqlerrm); gv_exc_flag := 'N'; raise;
+        when others then
+            error_log_detail_apex('Ошибка в "Комиссия за обязательство"', 'sqlerrm='||sqlerrm);
+            dm.u_log(GC_PACKAGE,'c_t_s_commission_liability/error','Ошибка в "Комиссия за обязательство"; sqlerrm='||sqlerrm); gv_exc_flag := 'N'; raise;
     end;
 
     -- Компенсирующий спред за фиксацию ставки
@@ -710,7 +760,9 @@ create or replace package body DM.PKG_FV_CALC as
         i_do_calc();
         dm.u_log(GC_PACKAGE,'c_t_s_fixation_rate/END','Компенсирующий спред за фиксацию ставки');
     exception
-        when others then dm.u_log(GC_PACKAGE,'c_t_s_fixation_rate/error','Ошибка в "Компенсирующий спред за фиксацию ставки" '||sqlerrm);
+        when others then
+            error_log_detail_apex('Ошибка в "Компенсирующий спред за фиксацию ставки"', 'sqlerrm='||sqlerrm);
+            dm.u_log(GC_PACKAGE,'c_t_s_fixation_rate/error','Ошибка в "Компенсирующий спред за фиксацию ставки"; sqlerrm='||sqlerrm);
             gv_exc_flag := 'N'; raise;
     end;
 
@@ -738,7 +790,11 @@ create or replace package body DM.PKG_FV_CALC as
         i_do_calc;
         dm.u_log(GC_PACKAGE,'c_t_s_compensate_indicator/END','Компенсирующий спред за отмену/отсутствие индикаторов');
     exception
-        when others then dm.u_log(GC_PACKAGE,'c_t_s_compensate_indicator/error','Ошибка в "Компенсирующий спред за отмену/отсутствие индикаторов" '||sqlerrm); gv_exc_flag := 'N'; raise;
+        when others then
+            error_log_detail_apex('Ошибка в "Компенсирующий спред за отмену/отсутствие индикаторов"', 'sqlerrm='||sqlerrm);
+            dm.u_log(GC_PACKAGE,'c_t_s_compensate_indicator/error','Ошибка в "Компенсирующий спред за отмену/отсутствие индикаторов"; sqlerrm='||sqlerrm);
+            gv_exc_flag := 'N';
+            raise;
     end;
 
     -- Казначейские спреды (надбавки за право досрочного погашения, отмену индикаторов и фиксацию ставки на период выборки)
@@ -765,6 +821,7 @@ create or replace package body DM.PKG_FV_CALC as
     procedure calc_credit_risk_premium(p_fair_value in out nocopy t_fair_value) is
         v_lgd number;
         v_PD1_MACRO number;
+        v_detail_msg varchar2(4000) := null;
     begin
         dbms_application_info.set_action(action_name => 'calc_credit_risk_premium');
         dm.u_log(GC_PACKAGE,'calc_credit_risk_premium/BEGIN','Премия за кредитный риск');
@@ -777,8 +834,9 @@ create or replace package body DM.PKG_FV_CALC as
                and LGD_TYPE_CD = 'RES'
                and VALID_TO_DTTM = GC_EOW and p_fair_value.SNAPSHOT_DT between BEGIN_DT and END_DT;
         exception when no_data_found then
-            dm.u_log(GC_PACKAGE,'calc_credit_risk_premium','no_data_found at DWH.REF_LGD for LEASING_SUBJECT_TYPE_CD='||p_fair_value.leasing_subject_type_cd
-                                ||' LGD_TYPE_CD=''RES''');
+            v_detail_msg := 'no_data_found at DWH.REF_LGD for LEASING_SUBJECT_TYPE_CD='||p_fair_value.leasing_subject_type_cd
+                            ||' LGD_TYPE_CD=''RES''';
+            dm.u_log(GC_PACKAGE,'calc_credit_risk_premium', v_detail_msg);
             raise;
         end;
         begin
@@ -789,8 +847,9 @@ create or replace package body DM.PKG_FV_CALC as
                and RAT_ON_DATE = p_fair_value.rating_nam
                and VALID_TO_DTTM = GC_EOW and p_fair_value.SNAPSHOT_DT between ST_DATE and END_DATE;
         exception when no_data_found then
-            dm.u_log(GC_PACKAGE,'calc_credit_risk_premium','no_data_found at DWH.PD_CORP for RANK_MODEL_KEY(as rating)='||p_fair_value.rating_model_key
-                                ||' RAT_ON_DATE='||p_fair_value.rating_nam);
+            v_detail_msg := 'no_data_found at DWH.PD_CORP for RANK_MODEL_KEY(as rating)='||p_fair_value.rating_model_key
+                            ||' RAT_ON_DATE='||p_fair_value.rating_nam;
+            dm.u_log(GC_PACKAGE,'calc_credit_risk_premium', v_detail_msg);
             raise;
         end;
 
@@ -798,7 +857,10 @@ create or replace package body DM.PKG_FV_CALC as
 
         dm.u_log(GC_PACKAGE,'calc_credit_risk_premium/END','Премия за кредитный риск');
     exception
-        when others then dm.u_log(GC_PACKAGE,'calc_credit_risk_premium/error','Ошибка в расчёте "Премия за кредитный риск" '||sqlerrm); gv_exc_flag := 'N'; raise;
+        when others then
+            error_log_detail_apex('Ошибка в расчёте "Премия за кредитный риск"', nvl(v_detail_msg, 'sqlerrm='||sqlerrm));
+            dm.u_log(GC_PACKAGE,'calc_credit_risk_premium/error','Ошибка в расчёте "Премия за кредитный риск" '||sqlerrm); gv_exc_flag := 'N';
+            raise;
     end;
 
     -- Плата за экономический капитал (надбавка на покрытие других операционных и бизнес-рисков)
@@ -820,6 +882,7 @@ create or replace package body DM.PKG_FV_CALC as
         v_effective_term number;
         v_k number;
         v_roe number;
+        v_detail_msg varchar2(4000);
     begin
         dbms_application_info.set_action(action_name => 'calc_pay_economic_capital');
         dm.u_log(GC_PACKAGE,'calc_pay_economic_capital/BEGIN','Плата за экономический капитал');
@@ -827,10 +890,11 @@ create or replace package body DM.PKG_FV_CALC as
         v_C_E := case p_fair_value.balance_debt_amt when 0 then 0 else p_fair_value.market_value_amt / p_fair_value.balance_debt_amt end;
         v_E1 := case when v_C_E < .3 then 0
                      when v_C_E > 1.4 then p_fair_value.balance_debt_amt
-                     else p_fair_value.market_value_amt end;
+                     else p_fair_value.market_value_amt / 1.4 end;
         v_E2 := p_fair_value.balance_debt_amt - v_E1;
         v_LGD := case p_fair_value.balance_debt_amt when 0 then .045
-                 else (.35 * v_E1 + .045 * v_E2) / p_fair_value.balance_debt_amt end;
+                 else (case p_fair_value.leasing_subject_type_cd when 'Недвижимость' then .35 else .40 end
+                           * v_E1 + .045 * v_E2) / p_fair_value.balance_debt_amt end;
 
         begin
             select PD
@@ -839,8 +903,9 @@ create or replace package body DM.PKG_FV_CALC as
              where VALID_TO_DTTM = GC_EOW and p_fair_value.SNAPSHOT_DT between START_DT and END_DT
                and RATING_MODEL_KEY = p_fair_value.rating_model_key and RAT_ON_DATE = p_fair_value.rating_nam;
         exception when no_data_found then
-            dm.u_log(GC_PACKAGE,'calc_pay_economic_capital','no_data_found at DWH.PD_CORP_EC for RATING_MODEL_KEY='
-                                                            ||p_fair_value.rating_model_key||' and RAT_ON_DATE='||p_fair_value.rating_nam);
+            v_detail_msg := 'no_data_found at DWH.PD_CORP_EC for RATING_MODEL_KEY='
+                         ||p_fair_value.rating_model_key||' and RAT_ON_DATE='||p_fair_value.rating_nam;
+            dm.u_log(GC_PACKAGE,'calc_pay_economic_capital', v_detail_msg);
             raise;
         end;
 
@@ -869,15 +934,19 @@ create or replace package body DM.PKG_FV_CALC as
               from DWH.ROE
              where valid_to_dttm = GC_EOW and p_fair_value.SNAPSHOT_DT between START_DT and END_DT;
         exception when no_data_found then
-            dm.u_log(GC_PACKAGE,'calc_pay_economic_capital','no_data_found at DWH.ROE');
+            v_detail_msg := 'no_data_found at DWH.ROE';
+            dm.u_log(GC_PACKAGE,'calc_pay_economic_capital', v_detail_msg);
             raise;
         end;
 
-        p_fair_value.PEC_V := v_k * v_roe * p_fair_value.FTP_V;
+        p_fair_value.PEC_V := v_k * (v_roe - p_fair_value.FTP_V);
 
         dm.u_log(GC_PACKAGE,'calc_pay_economic_capital/END','Плата за экономический капитал');
     exception
-        when others then dm.u_log(GC_PACKAGE,'calc_pay_economic_capital/error','Ошибка в расчёте "Плата за экономический капитал" '||sqlerrm); gv_exc_flag := 'N'; raise;
+        when others then
+            error_log_detail_apex('Ошибка в расчёте "Плата за экономический капитал"', nvl(v_detail_msg, 'sqlerrm='||sqlerrm));
+            dm.u_log(GC_PACKAGE,'calc_pay_economic_capital/error','Ошибка в расчёте "Плата за экономический капитал" '||sqlerrm); gv_exc_flag := 'N';
+            raise;
     end;
 
     -- Прямые расходы бизнес-подразделения
@@ -894,7 +963,10 @@ create or replace package body DM.PKG_FV_CALC as
         end;
         dm.u_log(GC_PACKAGE,'calc_direct_expenses/END','Прямые расходы бизнес-подразделения');
     exception
-        when others then dm.u_log(GC_PACKAGE,'calc_treasury_spread/error','Ошибка в расчёте "Прямые расходы бизнес-подразделения" '||sqlerrm); gv_exc_flag := 'N'; raise;
+        when others then
+            error_log_detail_apex('Ошибка в расчёте "Прямые расходы бизнес-подразделения"', 'sqlerrm='||sqlerrm);
+            dm.u_log(GC_PACKAGE,'calc_treasury_spread/error','Ошибка в расчёте "Прямые расходы бизнес-подразделения" '||sqlerrm); gv_exc_flag := 'N';
+            raise;
     end;
 
     -- Административно-хозяйственные расходы
@@ -911,7 +983,10 @@ create or replace package body DM.PKG_FV_CALC as
         end;
         dm.u_log(GC_PACKAGE,'calc_administrative_expense/END','Административно-хозяйственные расходы');
     exception
-        when others then dm.u_log(GC_PACKAGE,'calc_administrative_expense/error','Ошибка в расчёте "Административно-хозяйственные расходы" '||sqlerrm); gv_exc_flag := 'N'; raise;
+        when others then
+            error_log_detail_apex('Ошибка в расчёте "Административно-хозяйственные расходы"', 'sqlerrm='||sqlerrm);
+            dm.u_log(GC_PACKAGE,'calc_administrative_expense/error','Ошибка в расчёте "Административно-хозяйственные расходы" '||sqlerrm); gv_exc_flag := 'N';
+            raise;
     end;
 
     -- Справедливая эффективная ставка МСФО
@@ -929,7 +1004,7 @@ create or replace package body DM.PKG_FV_CALC as
     begin
         dbms_application_info.set_action(action_name => 'calc_msfo_efficient_rate');
         dm.u_log(GC_PACKAGE,'calc_msfo_efficient_rate/BEGIN','Справедливая эффективная ставка МСФО');
-        v_commission := p_fair_value.comission_amt / p_fair_value.msfo_balance_debt_amt;
+        v_commission := (p_fair_value.comission_amt - p_fair_value.msfo_balance_debt_amt) / p_fair_value.comission_amt;
         open cur_msfo_rates(v_commission);
         fetch cur_msfo_rates into v_fv_msfo_rate;
         close cur_msfo_rates;
@@ -949,7 +1024,9 @@ create or replace package body DM.PKG_FV_CALC as
     exception
         when others then
             if cur_msfo_rates%isopen then close cur_msfo_rates; end if;
-            dm.u_log(GC_PACKAGE,'calc_msfo_efficient_rate/error','Ошибка в расчёте "Справедливая эффективная ставка МСФО" '||sqlerrm); gv_exc_flag := 'N'; raise;
+            error_log_detail_apex('Ошибка в расчёте "Справедливая эффективная ставка МСФО"', 'sqlerrm='||sqlerrm);
+            dm.u_log(GC_PACKAGE,'calc_msfo_efficient_rate/error','Ошибка в расчёте "Справедливая эффективная ставка МСФО" '||sqlerrm); gv_exc_flag := 'N';
+            raise;
     end;
 
     procedure main(
@@ -1011,6 +1088,7 @@ create or replace package body DM.PKG_FV_CALC as
         procedure init_log_apex is
         begin
             v_fair_value.calculation_id := etl.sq_input_file.nextval;
+            gv_calculation_id := v_fair_value.calculation_id;
             insert into ETL.LOAD_LOG_APEX(FILE_ID, USER_NAM, SNAPSHOT_DT, START_DT, END_DT, STATUS_DESC, STATUS_CD, FILE_NAME,
                                           FILE_SHORT_NAME, FILE_TYPE_CD, BLOB_CONTENT, MIME_TYPE, PARAM_1, PARAM_2, PARAM_3)
             select v_fair_value.calculation_id as FILE_ID,
@@ -1041,8 +1119,10 @@ create or replace package body DM.PKG_FV_CALC as
             where FILE_ID = v_fair_value.calculation_id;
             commit;
         end;
+
     begin
         gv_exc_flag := 'Y'; -- initial value for single run
+        gv_calculation_id := null;
         dm.u_log(GC_PACKAGE, 'main/BEGIN','Начало расчёта справедливой ставки. Дата расчёта '||to_char(p_snapshot_dt,'YYYY-MM-DD')
                                                                                ||' пользователь '||user);
         dbms_application_info.set_module(module_name => GC_PACKAGE, action_name => 'main');
