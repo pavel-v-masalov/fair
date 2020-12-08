@@ -659,7 +659,7 @@ create or replace package body DM.PKG_FV_CALC as
         p_fair_value.early_spread_v := nvl(get_treasury_spread(p_fair_value, 'EARLY_REPAYMENT'), p_fair_value.early_spread_v);
 
         insert into DM.FV_COMISSIONS (calculation_id, period_name, comission_amt)
-        select p_fair_value.calculation_id, to_char(INTERVAL2_DAYS_TO)||'-'||to_char(INTERVAL2_DAYS_FROM), VALUE
+        select p_fair_value.calculation_id, to_char(INTERVAL2_DAYS_FROM)||'-'||to_char(INTERVAL2_DAYS_TO), VALUE
           from DWH.TREASURY_SPREAD
          where TREASURY_SPREAD_TYPE = 'EARLY_REPAYMENT_COMISSION'
            and CURRENCY_LETTER_CD = p_fair_value.currency_letter_cd
