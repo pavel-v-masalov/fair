@@ -892,9 +892,9 @@ create or replace package body DM.PKG_FV_CALC as
                      when v_C_E > 1.4 then p_fair_value.balance_debt_amt
                      else p_fair_value.market_value_amt / 1.4 end;
         v_E2 := p_fair_value.balance_debt_amt - v_E1;
-        v_LGD := case p_fair_value.balance_debt_amt when 0 then .045
+        v_LGD := case p_fair_value.balance_debt_amt when 0 then .0045
                  else (case p_fair_value.leasing_subject_type_cd when 'Недвижимость' then .35 else .40 end
-                           * v_E1 + .045 * v_E2) / p_fair_value.balance_debt_amt end;
+                           * v_E1 + .45 * v_E2) / p_fair_value.balance_debt_amt end;
 
         begin
             select PD
@@ -916,7 +916,7 @@ create or replace package body DM.PKG_FV_CALC as
                                  then 0
                                else
                                  .04 * (1 - pl_max(100, p_fair_value.proceed_amt - 1) / 900) end;
-        v_R := .12 * ((1 - exp(-50*v_pd))/(1 - GC_EXP_50)) + .24 * (1 - (1 - exp(-50*v_pd)) / (1 - GC_EXP_50));
+        v_R := .12 * ((1 - exp(-50*v_pd))/(1 - GC_EXP_50)) + .24 * (1 - (1 - exp(-50*v_pd)) / (1 - GC_EXP_50)) - v_correction_R;
 
         v_n_reverse := normal_inv_cumulative_distrib(v_pd);
         v_n_reverse_999 := normal_inv_cumulative_distrib(.999);
