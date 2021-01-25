@@ -88,6 +88,7 @@ create or replace package body DM.PKG_FV_CALC as
 
     subtype t_fair_value is DM.FAIR_VALUE%rowtype;
     subtype t_currate is DWH.CURRATES%rowtype;
+    subtype t_fv_max_term is DWH.FV_MAX_TERM%rowtype;
 
     function pl_max(p_n1 number, p_n2 number) return number is
     begin
@@ -530,13 +531,13 @@ create or replace package body DM.PKG_FV_CALC as
             raise;
     end;
 
-    function get_over_fv_max_term(p_fair_value t_fair_value, p_rate_type_cd varchar2 default null) return number is
+    function get_over_fv_max_term(p_fair_value t_fair_value, p_rate_type_cd varchar2 default null) return t_fv_max_term is
         cursor cur_max_term is
-            select max_term from DWH.FV_MAX_TERM
+            select * from DWH.FV_MAX_TERM
              where p_fair_value.term_amt > max_term
                and (p_rate_type_cd is null or rate_type_cd = p_rate_type_cd)
              order by max_term;
-        v_max_term number;
+        v_max_term t_fv_max_term;
     begin
         dbms_application_info.set_action(action_name => 'get_over_fv_max_term');
         open cur_max_term;
@@ -582,14 +583,14 @@ create or replace package body DM.PKG_FV_CALC as
         open cur_rate1;
         fetch cur_rate1 into p_currate1;
         if p_currate1.report_dt is null then
-            raise_application_error(gc_error, 'No data fount for first currate');
+            raise_application_error(gc_error, 'Не найдены значения кривой ставок FTP (1) для заданных параметров расчета');
         end if;
         close cur_rate1;
 
         open cur_rate2;
         fetch cur_rate2 into p_currate2;
         if p_currate2.report_dt is null then
-            raise_application_error(gc_error, 'No data fount for second currate');
+            raise_application_error(gc_error, 'Не найдены значения кривой ставок FTP (2) для заданных параметров расчета');
         end if;
         close cur_rate2;
 
@@ -615,7 +616,7 @@ create or replace package body DM.PKG_FV_CALC as
 
     -- Расчет кривой FTP (Трансфертной ставки)
     procedure calc_ftp(p_fair_value in out nocopy t_fair_value) is
-        v_fv_max_term number;
+        v_fv_max_term t_fv_max_term;
         v_medium_term number;
         v_rate_period number; -- Срок
         v_currate1 t_currate;
@@ -625,8 +626,8 @@ create or replace package body DM.PKG_FV_CALC as
         dm.u_log(GC_PACKAGE,'calc_ftp/BEGIN','Расчет кривой FTP');
 
         v_fv_max_term := get_over_fv_max_term(p_fair_value, case p_fair_value.fixfloat when 'fix' then 'FTP_FIX' else 'FTP' end);
-        if not v_fv_max_term is null then
-            p_fair_value.ftp_v := v_fv_max_term;
+        if not v_fv_max_term.max_term is null then
+            p_fair_value.ftp_v := v_fv_max_term.value;
         else
             if p_fair_value.ftp_calculation_method_key = 2 then -- WAL
                 with init_date as
@@ -693,15 +694,15 @@ create or replace package body DM.PKG_FV_CALC as
 
     -- Компенсирующий спред и комиссия за досрочное погашение
     procedure c_t_s_advanced_repayment(p_fair_value in out nocopy t_fair_value) is
-        v_fv_max_term number;
+        v_fv_max_term t_fv_max_term;
         procedure i_do_calc is
         begin
             if p_fair_value.early_spread_type_key is null then
                 p_fair_value.early_spread_v := 0;
             else
                 v_fv_max_term := get_over_fv_max_term(p_fair_value, 'EARLY_SPREAD'); -- Спред за досрочное погашение
-                if not v_fv_max_term is null then
-                    p_fair_value.early_spread_v := v_fv_max_term;
+                if not v_fv_max_term.max_term is null then
+                    p_fair_value.early_spread_v := v_fv_max_term.value;
                     return;
                 end if;
                 if p_fair_value.early_spread_type_key = 1 then -- Спред + комиссия
@@ -740,7 +741,7 @@ create or replace package body DM.PKG_FV_CALC as
 
     -- Компенсирующий спред за фиксацию ставки
     procedure c_t_s_fixation_rate(p_fair_value in out nocopy t_fair_value) is
-        v_fv_max_term number;
+        v_fv_max_term t_fv_max_term;
         procedure i_do_calc is
         begin
             if p_fair_value.fix_period_amt is null then
@@ -748,8 +749,8 @@ create or replace package body DM.PKG_FV_CALC as
                 return;
             end if;
             v_fv_max_term := get_over_fv_max_term(p_fair_value, 'FIX_SPREAD'); -- Спред за фиксацию
-            if not v_fv_max_term is null then
-                p_fair_value.fix_spread_v := v_fv_max_term;
+            if not v_fv_max_term.max_term is null then
+                p_fair_value.fix_spread_v := v_fv_max_term.value;
                 return;
             end if;
             p_fair_value.fix_spread_v := get_treasury_spread(p_fair_value, 'FIX_RATE', p_fair_value.fix_period_amt);
@@ -768,12 +769,12 @@ create or replace package body DM.PKG_FV_CALC as
 
     -- Компенсирующий спред за отмену/отсутствие индикаторов
     procedure c_t_s_compensate_indicator(p_fair_value in out nocopy t_fair_value) is
-        v_fv_max_term number;
+        v_fv_max_term t_fv_max_term;
         procedure i_do_calc is
         begin
             v_fv_max_term := get_over_fv_max_term(p_fair_value, 'CNCL_SREAD'); -- Спред за отмену индикаторов
-            if not v_fv_max_term is null then
-                p_fair_value.cncl_spread_v := v_fv_max_term;
+            if not v_fv_max_term.max_term is null then
+                p_fair_value.cncl_spread_v := v_fv_max_term.value;
                 return;
             end if;
 
@@ -834,8 +835,7 @@ create or replace package body DM.PKG_FV_CALC as
                and LGD_TYPE_CD = 'RES'
                and VALID_TO_DTTM = GC_EOW and p_fair_value.SNAPSHOT_DT between BEGIN_DT and END_DT;
         exception when no_data_found then
-            v_detail_msg := 'no_data_found at DWH.REF_LGD for LEASING_SUBJECT_TYPE_CD='||p_fair_value.leasing_subject_type_cd
-                            ||' LGD_TYPE_CD=''RES''';
+            v_detail_msg := 'Не найдены значения LGD для заданных параметров расчета';
             dm.u_log(GC_PACKAGE,'calc_credit_risk_premium', v_detail_msg);
             raise;
         end;
@@ -847,8 +847,7 @@ create or replace package body DM.PKG_FV_CALC as
                and RAT_ON_DATE = p_fair_value.rating_nam
                and VALID_TO_DTTM = GC_EOW and p_fair_value.SNAPSHOT_DT between ST_DATE and END_DATE;
         exception when no_data_found then
-            v_detail_msg := 'no_data_found at DWH.PD_CORP for RANK_MODEL_KEY(as rating)='||p_fair_value.rating_model_key
-                            ||' RAT_ON_DATE='||p_fair_value.rating_nam;
+            v_detail_msg := 'Не найдены значения PD для резервов для заданных параметров расчета';
             dm.u_log(GC_PACKAGE,'calc_credit_risk_premium', v_detail_msg);
             raise;
         end;
@@ -903,8 +902,7 @@ create or replace package body DM.PKG_FV_CALC as
              where VALID_TO_DTTM = GC_EOW and p_fair_value.SNAPSHOT_DT between START_DT and END_DT
                and RATING_MODEL_KEY = p_fair_value.rating_model_key and RAT_ON_DATE = p_fair_value.rating_nam;
         exception when no_data_found then
-            v_detail_msg := 'no_data_found at DWH.PD_CORP_EC for RATING_MODEL_KEY='
-                         ||p_fair_value.rating_model_key||' and RAT_ON_DATE='||p_fair_value.rating_nam;
+            v_detail_msg := 'Не найдены значения PD для ЭК для заданных параметров расчета';
             dm.u_log(GC_PACKAGE,'calc_pay_economic_capital', v_detail_msg);
             raise;
         end;
@@ -915,7 +913,7 @@ create or replace package body DM.PKG_FV_CALC as
                                  or v_PD = 1 -- 100%
                                  then 0
                                else
-                                 .04 * (1 - pl_max(100, p_fair_value.proceed_amt - 1) / 900) end;
+                                 .04 * (1 - (pl_max(100, p_fair_value.proceed_amt) - 100) / 900) end;
         v_R := .12 * ((1 - exp(-50*v_pd))/(1 - GC_EXP_50)) + .24 * (1 - (1 - exp(-50*v_pd)) / (1 - GC_EXP_50)) - v_correction_R;
 
         v_n_reverse := normal_inv_cumulative_distrib(v_pd);
@@ -1055,7 +1053,7 @@ create or replace package body DM.PKG_FV_CALC as
         ,p_comission_amt number -- Комиссия за организацию сделки
     ) is
         v_fair_value t_Fair_Value;
-        v_fv_max_term number;
+        v_fv_max_term t_fv_max_term;
 
         procedure init_fair_record is
         begin
@@ -1136,8 +1134,8 @@ create or replace package body DM.PKG_FV_CALC as
 
         -- Если [Срок сделки] превышает хотя бы один максимальный срок
         v_fv_max_term := get_over_fv_max_term(v_fair_value);
-        if not v_fv_max_term is null then
-            v_fair_value.comment := 'Для сделок более '||v_fv_max_term||' дн. необходимо индивидуально согласование с Казначейством';
+        if not v_fv_max_term.max_term is null then
+            v_fair_value.comment := 'Для сделок более '||v_fv_max_term.max_term||' дн. необходимо индивидуально согласование с Казначейством';
         end if;
         -- Расчет кривой FTP (Трансфертной ставки)
         calc_ftp(v_fair_value);
