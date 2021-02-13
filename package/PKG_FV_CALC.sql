@@ -101,6 +101,17 @@ create or replace package body DM.PKG_FV_CALC as
       return case when p_n1 > p_n2 then p_n1 else p_n2 end;
     end;
 
+    function pl_min(p_n1 number, p_n2 number) return number is
+    begin
+        if p_n1 is null then
+            return p_n2;
+        end if;
+        if p_n2 is null then
+            return p_n1;
+        end if;
+        return case when p_n1 < p_n2 then p_n1 else p_n2 end;
+    end;
+
     function pl_abs(n number) return number is
     begin
         return case when n < 0 then - n else n end;
@@ -886,14 +897,12 @@ create or replace package body DM.PKG_FV_CALC as
         dbms_application_info.set_action(action_name => 'calc_pay_economic_capital');
         dm.u_log(GC_PACKAGE,'calc_pay_economic_capital/BEGIN','Плата за экономический капитал');
 
-        v_C_E := case p_fair_value.balance_debt_amt when 0 then 0 else p_fair_value.market_value_amt / p_fair_value.balance_debt_amt end;
-        v_E1 := case when v_C_E < .3 then 0
-                     when v_C_E > 1.4 then p_fair_value.balance_debt_amt
-                     else p_fair_value.market_value_amt / 1.4 end;
-        v_E2 := p_fair_value.balance_debt_amt - v_E1;
-        v_LGD := case p_fair_value.balance_debt_amt when 0 then .0045
-                 else (case p_fair_value.leasing_subject_type_cd when 'Недвижимость' then .35 else .40 end
-                           * v_E1 + .45 * v_E2) / p_fair_value.balance_debt_amt end;
+        v_C_E := case p_fair_value.balance_debt_amt when 0 then 0 else .6 * p_fair_value.market_value_amt / p_fair_value.balance_debt_amt end;
+        v_E1 := pl_min(1., v_C_E);
+        v_E2 := 1. - v_E1;
+        v_LGD := case p_fair_value.balance_debt_amt when 0 then .25
+                 else (case p_fair_value.leasing_subject_type_cd when 'Недвижимость' then .20 else .25 end
+                            * v_E1 + .40 * v_E2) end;
 
         begin
             select PD
