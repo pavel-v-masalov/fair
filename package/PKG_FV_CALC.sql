@@ -1212,8 +1212,10 @@ create or replace package body DM.PKG_FV_CALC as
         -- Перед началом расчета ПЭК необходимо привести все суммы к рублю по курсу на дату расчета (p_snapshot_dt)
         v_fair_value.market_value_amt := get_exchange_rate(p_market_value_amt, p_Market_currency_letter_cd, 'Курс валюты рыночной стоимости',
                                                            p_snapshot_dt, v_fair_value.market_Exchange_rate, v_fair_value.market_Exchange_rate_dt);
-        v_fair_value.proceed_amt := get_exchange_rate(p_proceed_amt, p_Proceed_currency_letter_cd, 'Курс валюты выручки',
+        if not p_Proceed_currency_letter_cd is null then
+            v_fair_value.proceed_amt := get_exchange_rate(p_proceed_amt, p_Proceed_currency_letter_cd, 'Курс валюты выручки',
                                                       p_snapshot_dt, v_fair_value.proceed_Exchange_rate, v_fair_value.proceed_Exchange_rate_dt);
+        end if;
         v_fair_value.balance_debt_amt := get_exchange_rate(p_balance_debt_amt, p_currency_letter_cd, 'Курс валюты договора',
                                                            p_snapshot_dt, v_fair_value.Contract_Exchange_rate, v_fair_value.Contract_Exchange_rate_dt,
                                                            'Балансовая величина задолженности');
