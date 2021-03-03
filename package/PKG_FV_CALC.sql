@@ -11,7 +11,7 @@ create or replace package DM.PKG_FV_CALC as
                 ,p_rating_model_key number -- Ключ рейтинговой модели
                 ,p_rating_nam varchar2 -- Рейтинг
                 ,p_leasing_subject_type_cd varchar2 -- Типа лизингового имущества
-                ,p_currency_letter_cd varchar2 -- Валюта типа ставки
+                ,p_currency_letter_cd varchar2 -- Валюта типа ставки / валюта договора
                 ,p_fixfloat varchar2 -- Признак фиксированной плавающей ставки
                 ,p_contracts_terms_key number -- Ключ стандартных условий договора
                 ,p_ftp_calculation_method_key number -- Ключи Методики расчета ставки FTP
@@ -21,14 +21,15 @@ create or replace package DM.PKG_FV_CALC as
                 ,p_fix_period_amt number -- Период фиксации
                 ,p_use_period_amt number -- Период использования
                 ,p_ind_cncl_term_amt number -- Срок отмены тестирования
-                ,p_balance_debt_amt number -- Балансовая величина задолженности, руб.
-                ,p_market_value_amt number --  Рыночная стоимость имущества
-                ,p_proceed_amt number -- Выручка, млн. RUB без НДС за последний календарный год
+                ,p_balance_debt_amt number -- Балансовая величина задолженности, валюта
+                ,p_market_value_amt number --  Рыночная стоимость имущества, валюта (!)
+                ,p_proceed_amt number -- Выручка, млн. RUB без НДС за последний календарный год, валюта (!)
                 ,p_other_spread number -- Прочие спреды
                 ,p_other_spread_comment varchar2 -- Комментарий к прочим спредам
-                ,p_msfo_balance_debt_amt number -- Задолженность по графику МСФО
-                ,p_comission_amt number -- Комиссия за организацию сделки
-
+                ,p_msfo_balance_debt_amt number -- Задолженность по графику МСФО, валюта
+                ,p_comission_amt number -- Комиссия за организацию сделки, валюта
+                ,p_Market_currency_letter_cd varchar2 -- Валюта рыночной стоимости
+                ,p_Proceed_currency_letter_cd varchar2 -- Валюта выручки
     );
 
 end;
@@ -39,6 +40,7 @@ create or replace package body DM.PKG_FV_CALC as
 
     GC_PACKAGE constant varchar2(30) := 'DM.PKG_FV_CALC';
     GC_EOW constant date := date '2400-01-01'; -- end of world
+    GC_BASE_CURRENCY constant number := 125; -- рубль
 
     GC_EXP_50 constant number := exp(-50);
     GC_PI constant number := 3.1415926;
@@ -398,7 +400,9 @@ create or replace package body DM.PKG_FV_CALC as
             other_spread,
             other_spread_comment,
             msfo_balance_debt_amt,
-            comission_amt
+            comission_amt,
+            Market_currency_letter_cd,
+            Proceed_currency_letter_cd
         )
         values (
             p_fair_value.calculation_id,
@@ -425,7 +429,9 @@ create or replace package body DM.PKG_FV_CALC as
             p_fair_value.other_spread,
             p_fair_value.other_spread_comment,
             p_fair_value.msfo_balance_debt_amt,
-            p_fair_value.comission_amt
+            p_fair_value.comission_amt,
+            p_fair_value.Market_currency_letter_cd,
+            p_fair_value.Proceed_currency_letter_cd
         )
         return CALCULATION_ID, report_dt into p_fair_value.calculation_id, p_fair_value.report_dt;
         commit;
@@ -453,7 +459,13 @@ create or replace package body DM.PKG_FV_CALC as
                FULL_CNCL_SPREAD_V = p_fair_value.FULL_CNCL_SPREAD_V,
                TERM_CNCL_SPREAD_V = p_fair_value.TERM_CNCL_SPREAD_V,
                ONE_CNCL_SPREAD_V = p_fair_value.ONE_CNCL_SPREAD_V,
-               FV_MSFO_V = p_fair_value.fv_msfo_v
+               FV_MSFO_V = p_fair_value.fv_msfo_v,
+               Contract_Exchange_rate = p_fair_value.Contract_Exchange_rate,
+               market_Exchange_rate = p_fair_value.market_Exchange_rate,
+               proceed_Exchange_rate = p_fair_value.proceed_Exchange_rate,
+               Contract_Exchange_rate_dt = p_fair_value.Contract_Exchange_rate_dt,
+               market_Exchange_rate_dt = p_fair_value.market_Exchange_rate_dt,
+               proceed_Exchange_rate_dt = p_fair_value.proceed_Exchange_rate_dt
         where CALCULATION_ID = p_fair_value.calculation_id;
     exception
         when others then
@@ -570,7 +582,7 @@ create or replace package body DM.PKG_FV_CALC as
 
     procedure get_currates(p_fair_value t_fair_value, p_rate_period number, p_currate1 out t_currate, p_currate2 out t_currate) is
         cursor cur_rate1 is
-            select *
+            select /*+ first_rows(1) */ *
               from DWH.CURRATES
              where report_dt <= p_fair_value.snapshot_dt
                and day_cnt <= p_rate_period
@@ -580,7 +592,7 @@ create or replace package body DM.PKG_FV_CALC as
             order by report_dt desc, day_cnt desc;
 
         cursor cur_rate2 is
-            select *
+            select /*+ first_rows(1) */ *
             from DWH.CURRATES
             where report_dt <= p_fair_value.snapshot_dt
               and day_cnt > p_rate_period
@@ -621,6 +633,58 @@ create or replace package body DM.PKG_FV_CALC as
                          ||' fixfloat='||p_fair_value.fixfloat
                          ||' currency_letter_cd='||p_fair_value.currency_letter_cd
                          ||'; sqlerrm='||sqlerrm);
+            gv_exc_flag := 'N';
+            raise;
+    end;
+
+    -- получение пересчитанного значения по курсу для валюты на дату
+    function get_exchange_rate(p_amt number, p_currency_cd varchar2, p_currency_mean varchar2, p_exch_dt date,
+                               p_eval_rate out number, p_eval_exch_dt out date, p_amt_mean varchar2 default null) return number is
+        v_result number;
+        v_errmsg varchar2(4000);
+        p_currency_key number;
+        cursor cur_exch_rate is
+            select *
+              from dwh.exchange_rates
+             where ex_rate_dt <= p_exch_dt
+               and Valid_to_dttm = GC_EOW
+               and Base_currency_key = GC_BASE_CURRENCY
+               and Currency_key = p_currency_key
+            order by ex_rate_dt desc;
+        v_exchange_rate cur_exch_rate%rowtype;
+    begin
+        dbms_application_info.set_action(action_name => 'get_exchange_rate');
+
+        select t.currency_key
+          into p_currency_key
+          from dwh.currencies t
+         where valid_to_dttm = GC_EOW
+           and end_dt = date '2099-12-31'
+           and currency_letter_cd = p_currency_cd;
+        if p_currency_key = GC_BASE_CURRENCY then
+            v_result := p_amt;
+            p_eval_rate := 1;
+            p_eval_exch_dt := null;
+        else
+            open cur_exch_rate;
+            fetch cur_exch_rate into v_exchange_rate;
+            if cur_exch_rate%notfound then
+                raise_application_error(gc_error, 'Не найден курс обмена на дату '||to_char(p_exch_dt,'yyyy-mm-dd'));
+            end if;
+            close cur_exch_rate;
+            v_result := p_amt * v_exchange_rate.exchange_rate;
+            p_eval_rate := v_exchange_rate.exchange_rate;
+            p_eval_exch_dt := v_exchange_rate.ex_rate_dt;
+        end if;
+        return v_result;
+
+    exception
+        when others then
+            if cur_exch_rate%isopen then close cur_exch_rate; end if;
+            v_errmsg := 'Ошибка при вычислени курса "'||p_currency_mean||' для валюты "'||p_currency_cd||'"'
+                        ||case when not p_amt_mean is null then ' для суммы "'||p_amt_mean||'"' end;
+            error_log_detail_apex(v_errmsg, 'sqlerrm='||sqlerrm);
+            dm.u_log(GC_PACKAGE,'get_exchange_rate/error', v_errmsg||'; sqlerrm='||sqlerrm);
             gv_exc_flag := 'N';
             raise;
     end;
@@ -1043,7 +1107,7 @@ create or replace package body DM.PKG_FV_CALC as
         ,p_rating_model_key number -- Ключ рейтинговой модели
         ,p_rating_nam varchar2 -- Рейтинг
         ,p_leasing_subject_type_cd varchar2 -- Типа лизингового имущества
-        ,p_currency_letter_cd varchar2 -- Валюта типа ставки
+        ,p_currency_letter_cd varchar2 -- Валюта типа ставки / валюта договора
         ,p_fixfloat varchar2 -- Признак фиксированной плавающей ставки
         ,p_contracts_terms_key number -- Ключ стандартных условий договора
         ,p_ftp_calculation_method_key number -- Ключи Методики расчета ставки FTP
@@ -1053,13 +1117,15 @@ create or replace package body DM.PKG_FV_CALC as
         ,p_fix_period_amt number -- Период фиксации
         ,p_use_period_amt number -- Период использования
         ,p_ind_cncl_term_amt number -- Срок отмены тестирования
-        ,p_balance_debt_amt number -- Балансовая величина задолженности, руб.
-        ,p_market_value_amt number --  Рыночная стоимость имущества
-        ,p_proceed_amt number -- Выручка, млн. RUB без НДС за последний календарный год
+        ,p_balance_debt_amt number -- Балансовая величина задолженности, валюта
+        ,p_market_value_amt number --  Рыночная стоимость имущества, валюта (!)
+        ,p_proceed_amt number -- Выручка, млн. RUB без НДС за последний календарный год, валюта (!)
         ,p_other_spread number -- Прочие спреды
         ,p_other_spread_comment varchar2 -- Комментарий к прочим спредам
-        ,p_msfo_balance_debt_amt number -- Задолженность по графику МСФО
-        ,p_comission_amt number -- Комиссия за организацию сделки
+        ,p_msfo_balance_debt_amt number -- Задолженность по графику МСФО, валюта
+        ,p_comission_amt number -- Комиссия за организацию сделки, валюта
+        ,p_Market_currency_letter_cd varchar2 -- Валюта рыночной стоимости
+        ,p_Proceed_currency_letter_cd varchar2 -- Валюта выручки
     ) is
         v_fair_value t_Fair_Value;
         v_fv_max_term t_fv_max_term;
@@ -1089,6 +1155,8 @@ create or replace package body DM.PKG_FV_CALC as
             v_fair_value.other_spread_comment := p_other_spread_comment;
             v_fair_value.msfo_balance_debt_amt := p_msfo_balance_debt_amt;
             v_fair_value.comission_amt := p_comission_amt;
+            v_fair_value.Market_currency_letter_cd := p_Market_currency_letter_cd;
+            v_fair_value.Proceed_currency_letter_cd := p_Proceed_currency_letter_cd;
             insert_fair(v_fair_value);
         end;
 
@@ -1140,6 +1208,21 @@ create or replace package body DM.PKG_FV_CALC as
             dm.PKG_FV_LOAD.SCHEDULES_main(p_file_id => v_fair_value.calculation_id
                                           , p_file_name => p_schedule_file_name);
         end if;
+
+        -- Перед началом расчета ПЭК необходимо привести все суммы к рублю по курсу на дату расчета (p_snapshot_dt)
+        v_fair_value.market_value_amt := get_exchange_rate(p_market_value_amt, p_Market_currency_letter_cd, 'Курс валюты рыночной стоимости',
+                                                           p_snapshot_dt, v_fair_value.market_Exchange_rate, v_fair_value.market_Exchange_rate_dt);
+        v_fair_value.proceed_amt := get_exchange_rate(p_proceed_amt, p_Proceed_currency_letter_cd, 'Курс валюты выручки',
+                                                      p_snapshot_dt, v_fair_value.proceed_Exchange_rate, v_fair_value.proceed_Exchange_rate_dt);
+        v_fair_value.balance_debt_amt := get_exchange_rate(p_balance_debt_amt, p_currency_letter_cd, 'Курс валюты договора',
+                                                           p_snapshot_dt, v_fair_value.Contract_Exchange_rate, v_fair_value.Contract_Exchange_rate_dt,
+                                                           'Балансовая величина задолженности');
+        v_fair_value.msfo_balance_debt_amt := get_exchange_rate(p_msfo_balance_debt_amt, p_currency_letter_cd, 'Курс валюты договора',
+                                                                p_snapshot_dt, v_fair_value.Contract_Exchange_rate, v_fair_value.Contract_Exchange_rate_dt,
+                                                                'Задолженность по графику МСФО');
+        v_fair_value.comission_amt := get_exchange_rate(p_comission_amt, p_currency_letter_cd, 'Курс валюты договора',
+                                                        p_snapshot_dt, v_fair_value.Contract_Exchange_rate, v_fair_value.Contract_Exchange_rate_dt,
+                                                        'Комиссия за организацию сделки');
 
         -- Если [Срок сделки] превышает хотя бы один максимальный срок
         v_fv_max_term := get_over_fv_max_term(v_fair_value);
