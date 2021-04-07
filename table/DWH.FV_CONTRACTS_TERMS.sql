@@ -1,9 +1,26 @@
-CREATE TABLE DWH.FV_CONTRACTS_TERMS (
-    CONTRACTS_TERMS_KEY NUMBER primary key ,
-    CONTRACTS_TERMS_NAME VARCHAR2(100),
-    DESCRIPTION VARCHAR2(4000)
+begin
+    execute immediate 'drop table DWH.FV_CONTRACTS_TERMS';
+exception when others then
+    null; -- no error
+end;
+/
+
+create table DWH.FV_CONTRACTS_TERMS
+(
+    contracts_terms_key  NUMBER not null,
+    contracts_terms_name VARCHAR2(1000),
+    description          VARCHAR2(4000)
 );
-COMMENT ON COLUMN DWH.FV_CONTRACTS_TERMS.CONTRACTS_TERMS_KEY IS 'Ключ условий контракта';
-COMMENT ON COLUMN DWH.FV_CONTRACTS_TERMS.CONTRACTS_TERMS_NAME IS 'Название условий контракта';
-COMMENT ON COLUMN DWH.FV_CONTRACTS_TERMS.DESCRIPTION IS 'Описание';
-COMMENT ON TABLE DWH.FV_CONTRACTS_TERMS  IS 'Справочник условий контрактов (для расчета справедливой ставки)';
+
+comment on table DWH.FV_CONTRACTS_TERMS
+    is 'Справочник условий контрактов (для расчета справедливой ставки)';
+comment on column DWH.FV_CONTRACTS_TERMS.contracts_terms_key
+    is 'Ключ условий контракта';
+comment on column DWH.FV_CONTRACTS_TERMS.contracts_terms_name
+    is 'Название условий контракта';
+comment on column DWH.FV_CONTRACTS_TERMS.description
+    is 'Описание';
+
+alter table DWH.FV_CONTRACTS_TERMS
+    add primary key (CONTRACTS_TERMS_KEY)
+        using index;
