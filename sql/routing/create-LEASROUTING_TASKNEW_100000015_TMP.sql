@@ -5,6 +5,7 @@ select /*+ PARALLEL(4) */ t.*, max(t.rn) over (partition by opportunityid, COUNT
     select 
         r.opportunityid, r.COUNTEDON,
         row_number() over (partition by r.opportunityid, r.countedon order by 1 asc) rn,
+        ACTIVITYID,
         ACTUALEND,
         ACTUALSTART,
         CREATEDON,
