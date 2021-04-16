@@ -24,7 +24,7 @@ select /*+ PARALLEL(4) */ t.*, max(t.rn) over (partition by opportunityid, COUNT
 where t.new_status = 100000002 and t.statecode = 1 and t.new_type = 100000016 and VALID_TO_DTTM = to_date('2400-01-01', 'yyyy-mm-dd')
 ) t;
 
-create index DWH.LEASROUT_TASKNEW_10016_TMP_i01 on DWH.LEASROUT_TASKNEW_10016_TMP(opportunityid, COUNTEDON) compress 1;
+create index DWH.LEASROUT_TASKNEW_10016_TMP_i01 on DWH.LEASROUT_TASKNEW_10016_TMP(opportunityid, COUNTEDON, rn) compress 2;
 
 begin
     DBMS_STATS.GATHER_TABLE_STATS(ownname => 'DWH', tabname => 'LEASROUT_TASKNEW_10016_TMP', degree=>4);
