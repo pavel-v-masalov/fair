@@ -38,7 +38,6 @@ insert /*+ append sys_dl_cursor nologging */ into DM.LEASROUTING_MODELS
     NEW_PODPRODUCTNAME,
     NEW_PRODUCTIDNAME,
     NEW_PROPERTYRISK,
-    new_count,
     NEW_ROUTINGBYMODEL,
     NEW_STATUSCODEIDNAME,
     NEW_TOTALFINANCINGSUM,
@@ -76,7 +75,6 @@ insert /*+ append sys_dl_cursor nologging */ into DM.LEASROUTING_MODELS
     OPPORTUNITYFRAUDRESULT,
     PRODUCTOP,
     SCORINGSCORE,
-    isPrescorig,
     MODEL_TYPE,
     calc_conditions,
     ISPRESCORINGCALL,
@@ -262,7 +260,6 @@ select /*+ parallel(4) */
         ,o.NEW_PODPRODUCTNAME
         ,o.NEW_PRODUCTIDNAME
         ,o.NEW_PROPERTYRISK
-        ,o.new_count
         ,o.NEW_ROUTINGBYMODEL
         ,o.NEW_STATUSCODEIDNAME
         ,o.NEW_TOTALFINANCINGSUM
@@ -300,7 +297,6 @@ select /*+ parallel(4) */
         ,r.OPPORTUNITYFRAUDRESULT
         ,r.PRODUCTOP
         ,r.SCORINGSCORE
-        ,r.isPrescorig
         ,r.MODEL_TYPE
         ,r.calc_conditions
         ,r.ISPRESCORINGCALL
@@ -469,7 +465,6 @@ from (
             ,r.OPPORTUNITYFRAUDRESULT
             ,r.PRODUCTOP
             ,r.SCORINGSCORE
-            ,r.isPrescorig
             ,r.MODEL_TYPE
             ,r.calc_conditions
             ,r.ISPRESCORINGCALL

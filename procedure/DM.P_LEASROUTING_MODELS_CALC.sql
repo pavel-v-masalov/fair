@@ -32,11 +32,10 @@ begin
         MIN(OPPORTUNITYFRAUDRESULT) KEEP (DENSE_RANK FIRST ORDER BY OPPORTUNITYFRAUDRESULT nulls last) OPPORTUNITYFRAUDRESULT,
         MIN(PRODUCTOP) KEEP (DENSE_RANK FIRST ORDER BY PRODUCTOP nulls last) PRODUCTOP,
         MIN(SCORINGSCORE) KEEP (DENSE_RANK FIRST ORDER BY SCORINGSCORE nulls last) SCORINGSCORE,
-        /*MIN(isPrescorig) KEEP (DENSE_RANK FIRST ORDER BY isPrescorig nulls last)*/cast(null as varchar2(100)) isPrescorig,
-        /*MIN(MODEL_TYPE) KEEP (DENSE_RANK FIRST ORDER BY MODEL_TYPE nulls last)*/cast(null as varchar2(100)) MODEL_TYPE,
-        /*MIN(calc_conditions) KEEP (DENSE_RANK FIRST ORDER BY calc_conditions nulls last)*/cast(null as varchar2(100)) calc_conditions,
-        /*MIN(ISPRESCORINGCALL) KEEP (DENSE_RANK FIRST ORDER BY ISPRESCORINGCALL nulls last)*/cast(null as varchar2(100)) ISPRESCORINGCALL,
-        /*MIN(model_settings) KEEP (DENSE_RANK FIRST ORDER BY model_settings nulls last)*/ cast(null as varchar2(100)) model_settings
+        MIN(MODEL_TYPE) KEEP (DENSE_RANK FIRST ORDER BY MODEL_TYPE nulls last) MODEL_TYPE,
+        MIN(calc_conditions) KEEP (DENSE_RANK FIRST ORDER BY calc_conditions nulls last) calc_conditions,
+        MIN(ISPRESCORINGCALL) KEEP (DENSE_RANK FIRST ORDER BY ISPRESCORINGCALL nulls last) ISPRESCORINGCALL,
+        MIN(model_settings) KEEP (DENSE_RANK FIRST ORDER BY model_settings nulls last) model_settings
       from DWH.RMD r
      group by r.opportunityname, r.opportunityid, r.countedon
     !';
@@ -67,7 +66,6 @@ begin
           NEW_PODPRODUCTNAME,
           NEW_PRODUCTIDNAME,
           NEW_PROPERTYRISK,
-          new_count,
           NEW_ROUTINGBYMODEL,
           NEW_STATUSCODEIDNAME,
           NEW_TOTALFINANCINGSUM,
@@ -88,7 +86,6 @@ begin
              o.NEW_PODPRODUCTNAME,
              o.NEW_PRODUCTIDNAME,
              o.NEW_PROPERTYRISK,
-             /*o.*/cast(null as varchar2(100)) new_count,
              o.NEW_ROUTINGBYMODEL,
              o.NEW_STATUSCODEIDNAME,
              o.NEW_TOTALFINANCINGSUM,
@@ -766,7 +763,6 @@ begin
         NEW_PODPRODUCTNAME,
         NEW_PRODUCTIDNAME,
         NEW_PROPERTYRISK,
-        new_count,
         NEW_ROUTINGBYMODEL,
         NEW_STATUSCODEIDNAME,
         NEW_TOTALFINANCINGSUM,
@@ -804,7 +800,6 @@ begin
         OPPORTUNITYFRAUDRESULT,
         PRODUCTOP,
         SCORINGSCORE,
-        isPrescorig,
         MODEL_TYPE,
         calc_conditions,
         ISPRESCORINGCALL,
@@ -990,7 +985,6 @@ begin
             ,o.NEW_PODPRODUCTNAME
             ,o.NEW_PRODUCTIDNAME
             ,o.NEW_PROPERTYRISK
-            ,o.new_count
             ,o.NEW_ROUTINGBYMODEL
             ,o.NEW_STATUSCODEIDNAME
             ,o.NEW_TOTALFINANCINGSUM
@@ -1028,7 +1022,6 @@ begin
             ,r.OPPORTUNITYFRAUDRESULT
             ,r.PRODUCTOP
             ,r.SCORINGSCORE
-            ,r.isPrescorig
             ,r.MODEL_TYPE
             ,r.calc_conditions
             ,r.ISPRESCORINGCALL
@@ -1197,7 +1190,6 @@ begin
                     ,r.OPPORTUNITYFRAUDRESULT
                     ,r.PRODUCTOP
                     ,r.SCORINGSCORE
-                    ,r.isPrescorig
                     ,r.MODEL_TYPE
                     ,r.calc_conditions
                     ,r.ISPRESCORINGCALL

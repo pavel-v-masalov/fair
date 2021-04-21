@@ -12,11 +12,10 @@ select /*+ PARALLEL(4) */ r.opportunityname, r.opportunityid, r.countedon,
     MIN(OPPORTUNITYFRAUDRESULT) KEEP (DENSE_RANK FIRST ORDER BY OPPORTUNITYFRAUDRESULT nulls last) OPPORTUNITYFRAUDRESULT,--Прогноз фрод дефолта на сделку
     MIN(PRODUCTOP) KEEP (DENSE_RANK FIRST ORDER BY PRODUCTOP nulls last) PRODUCTOP,--Продукт из лизинговой сделки
     MIN(SCORINGSCORE) KEEP (DENSE_RANK FIRST ORDER BY SCORINGSCORE nulls last) SCORINGSCORE,--НБКИ балл
-    /*MIN(isPrescorig) KEEP (DENSE_RANK FIRST ORDER BY isPrescorig nulls last)*/cast(null as varchar2(100)) isPrescorig,--Расчёт в рамках прескоринга
-    /*MIN(MODEL_TYPE) KEEP (DENSE_RANK FIRST ORDER BY MODEL_TYPE nulls last)*/cast(null as varchar2(100)) MODEL_TYPE,--Тип модели
-    /*MIN(calc_conditions) KEEP (DENSE_RANK FIRST ORDER BY calc_conditions nulls last)*/cast(null as varchar2(100)) calc_conditions,--Условие попадания в повторные
-    /*MIN(ISPRESCORINGCALL) KEEP (DENSE_RANK FIRST ORDER BY ISPRESCORINGCALL nulls last)*/cast(null as varchar2(100)) ISPRESCORINGCALL,--Расчёт в рамках прескоринга
-    /*MIN(model_settings) KEEP (DENSE_RANK FIRST ORDER BY model_settings nulls last)*/ cast(null as varchar2(100)) model_settings--Кортеж включенных моделей на ммоент расчёта
+    MIN(MODEL_TYPE) KEEP (DENSE_RANK FIRST ORDER BY MODEL_TYPE nulls last) MODEL_TYPE,--Тип модели
+    MIN(calc_conditions) KEEP (DENSE_RANK FIRST ORDER BY calc_conditions nulls last) calc_conditions,--Условие попадания в повторные
+    MIN(ISPRESCORINGCALL) KEEP (DENSE_RANK FIRST ORDER BY ISPRESCORINGCALL nulls last) ISPRESCORINGCALL,--Расчёт в рамках прескоринга
+    MIN(model_settings) KEEP (DENSE_RANK FIRST ORDER BY model_settings nulls last) model_settings--Кортеж включенных моделей на ммоент расчёта
   from DWH.RMD r
  group by r.opportunityname, r.opportunityid, r.countedon;
  
