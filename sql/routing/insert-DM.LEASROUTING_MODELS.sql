@@ -1,6 +1,7 @@
 insert /*+ append sys_dl_cursor nologging */ into DM.LEASROUTING_MODELS
 (
     SNAPSHOT_DT,
+    opportunityid,
     ACCOUNTID,
     CREATEDON,
     EMAILADDRESS1,
@@ -223,6 +224,7 @@ insert /*+ append sys_dl_cursor nologging */ into DM.LEASROUTING_MODELS
 )
 select /*+ parallel(4) */
     null SNAPSHOT_DT
+    ,r.opportunityid
     ,a.ACCOUNTID
     ,a.CREATEDON
     ,a.EMAILADDRESS1

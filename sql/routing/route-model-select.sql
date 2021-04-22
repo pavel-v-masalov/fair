@@ -33,10 +33,7 @@ left outer join DWH.LEASROUT_TASKNEW_10029_TMP t29 on r.opportunityid = t29.oppo
 left outer join DWH.LEASROUT_TASKNEW_10031_TMP t31 on r.opportunityid = t31.opportunityid and r.COUNTEDON = t31.countedon and t31.rn = l.rn and t31.rn <= t31.rn_m
 left outer join DWH.LEASROUT_TASKNEW_100032_TMP t32 on r.opportunityid = t32.opportunityid and r.COUNTEDON = t32.countedon and t32.rn = l.rn and t32.rn <= t32.rn_m
 left outer join DWH.LEASROUT_TASKNEW_100032OD_TMP t32od on r.opportunityid = t32od.opportunityid and r.COUNTEDON = t32od.countedon and t32od.rn = l.rn and t32od.rn <= t32od.rn_m
---where r.opportunityid = 'AD44822B-9189-EA11-80FC-02BF0A010246'
---where r.opportunityid = 'AAAA03DA-6754-E911-80F3-02BF0A010246'
---where r.opportunityid = 'AABC7A2C-F319-EB11-8105-02BF0A010246'
---where r.opportunityid = 'AA2F70C4-AEF1-EA11-80FE-02BF0A010246'
+where r.opportunityid = 'AAA15229-DF5F-EB11-8103-02BF0A010246'
 --and l.rn <= greatest(nvl(t45.rn_m,1), nvl(t09.rn_m,1), nvl(t09kuf.rn_m,1), nvl(t15.rn_m,1), nvl(t11.rn_m,1), nvl(t16.rn_m,1), nvl(t29.rn_m,1), nvl(t31.rn_m,1), nvl(t32.rn_m,1), nvl(t32od.rn_m,1))
 order by r.opportunityid, r.COUNTEDON, l.rn
 ) where l_rn <= gr

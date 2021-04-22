@@ -1,7 +1,7 @@
 drop table DWH.LEASROUTING_RMD_TMP;
 
 create table DWH.LEASROUTING_RMD_TMP NOLOGGING as
-select /*+ PARALLEL(4) */ r.opportunityname, r.opportunityid, r.countedon,
+select /*+ PARALLEL(4) */ min(r.opportunityname) KEEP (DENSE_RANK FIRST ORDER BY opportunityname nulls last) opportunityname, r.opportunityid, r.countedon,
        nvl(lead(r.countedon, 1) over(partition by r.opportunityid order by r.countedon),to_date('2400-01-01', 'yyyy-mm-dd')) countedon2,
     MIN(CREDITMODELISCOUNTABLE) KEEP (DENSE_RANK FIRST ORDER BY CREDITMODELISCOUNTABLE nulls last) CREDITMODELISCOUNTABLE,--Можно рассчитать кредитную модель
     MIN(FINANCESUM) KEEP (DENSE_RANK FIRST ORDER BY FINANCESUM nulls last) FINANCESUM,--Совокупная сумма ф-ия по ЛП с ГК с учетом инв (лизинговая сделка)
@@ -17,7 +17,7 @@ select /*+ PARALLEL(4) */ r.opportunityname, r.opportunityid, r.countedon,
     MIN(ISPRESCORINGCALL) KEEP (DENSE_RANK FIRST ORDER BY ISPRESCORINGCALL nulls last) ISPRESCORINGCALL,--Расчёт в рамках прескоринга
     MIN(model_settings) KEEP (DENSE_RANK FIRST ORDER BY model_settings nulls last) model_settings--Кортеж включенных моделей на ммоент расчёта
   from DWH.RMD r
- group by r.opportunityname, r.opportunityid, r.countedon;
+ group by r.opportunityid, r.countedon;
  
 create index DWH.LEASROUTING_RMD_TMP_i01 on DWH.LEASROUTING_RMD_TMP(opportunityid) compress;
 

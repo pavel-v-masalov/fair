@@ -1,4 +1,4 @@
-create or replace procedure DM.P_LEASROUTING_MODELS_CALC (p_SNAPSHOT_DT date default trunc(sysdate)) is
+create or replace procedure DM.P_LEASROUTING_MODELS_CALC (p_SNAPSHOT_DT date default trunc(sysdate), p_develop_mode boolean default false) is
     GC_PROC_NAME constant varchar2(100) := 'DM.P_LEASROUTING_MODELS_CALC';
 
 procedure truncate_table (p_owner varchar2, p_table varchar2) is
@@ -21,7 +21,7 @@ begin
     drop_table('DWH','LEASROUTING_RMD_TMP');
     execute immediate q'!
     create table DWH.LEASROUTING_RMD_TMP NOLOGGING as
-    select /*+ PARALLEL(4) */ r.opportunityname, r.opportunityid, r.countedon,
+    select /*+ PARALLEL(4) */ min(r.opportunityname) KEEP (DENSE_RANK FIRST ORDER BY opportunityname nulls last) opportunityname, r.opportunityid, r.countedon,
            nvl(lead(r.countedon, 1) over(partition by r.opportunityid order by r.countedon),to_date('2400-01-01', 'yyyy-mm-dd')) countedon2,
         MIN(CREDITMODELISCOUNTABLE) KEEP (DENSE_RANK FIRST ORDER BY CREDITMODELISCOUNTABLE nulls last) CREDITMODELISCOUNTABLE,
         MIN(FINANCESUM) KEEP (DENSE_RANK FIRST ORDER BY FINANCESUM nulls last) FINANCESUM,
@@ -37,10 +37,10 @@ begin
         MIN(ISPRESCORINGCALL) KEEP (DENSE_RANK FIRST ORDER BY ISPRESCORINGCALL nulls last) ISPRESCORINGCALL,
         MIN(model_settings) KEEP (DENSE_RANK FIRST ORDER BY model_settings nulls last) model_settings
       from DWH.RMD r
-     group by r.opportunityname, r.opportunityid, r.countedon
+     group by r.opportunityid, r.countedon
     !';
     execute immediate 'create index DWH.LEASROUTING_RMD_TMP_i01 on DWH.LEASROUTING_RMD_TMP(opportunityid) compress';
-    --DBMS_STATS.GATHER_TABLE_STATS(ownname => 'DWH', tabname => 'LEASROUTING_RMD_TMP', degree=>4);
+    DBMS_STATS.GATHER_TABLE_STATS(ownname => 'DWH', tabname => 'LEASROUTING_RMD_TMP', degree=>4);
 exception
     when others then
         dm.u_log('create_RMD_TMP', 'error' ,sqlerrm);
@@ -96,8 +96,8 @@ begin
          where not o.timeslotstart is null
         ) where rn$ = 1
     !';
-    --execute immediate 'create index DWH.LEASROUT_OPPORTUNITY_TMP_i01 on DWH.LEASROUTING_OPPORTUNITY_TMP (opportunityid, countedon) compress';
-    --DBMS_STATS.GATHER_TABLE_STATS(ownname => 'DWH', tabname => 'LEASROUTING_OPPORTUNITY_TMP', degree=>4);
+    execute immediate 'create index DWH.LEASROUT_OPPORTUNITY_TMP_i01 on DWH.LEASROUTING_OPPORTUNITY_TMP (opportunityid, countedon) compress';
+    DBMS_STATS.GATHER_TABLE_STATS(ownname => 'DWH', tabname => 'LEASROUTING_OPPORTUNITY_TMP', degree=>4);
 exception
     when others then
         dm.u_log('create_OPPORTUNITY_TMP', 'error' ,sqlerrm);
@@ -171,8 +171,8 @@ begin
          where not a.timeslotstart is null
         ) where rn$ = 1
     !';
-    --execute immediate 'create index DWH.LEASROUTING_ACCOUNT_TMP_i01 on DWH.LEASROUTING_ACCOUNT_TMP (opportunityid, countedon) compress';
-    --DBMS_STATS.GATHER_TABLE_STATS(ownname => 'DWH', tabname => 'LEASROUTING_ACCOUNT_TMP', degree=>4);
+    execute immediate 'create index DWH.LEASROUTING_ACCOUNT_TMP_i01 on DWH.LEASROUTING_ACCOUNT_TMP (opportunityid, countedon) compress';
+    DBMS_STATS.GATHER_TABLE_STATS(ownname => 'DWH', tabname => 'LEASROUTING_ACCOUNT_TMP', degree=>4);
 exception
     when others then
         dm.u_log('create_ACCOUNT_TMP', 'error' ,sqlerrm);
@@ -214,8 +214,8 @@ begin
          where not c.timeslotstart is null
         ) where rn$ = 1
     !';
-    --execute immediate 'create index DWH.LEASROUTING_CONTACT_TMP_i01 on DWH.LEASROUTING_CONTACT_TMP (opportunityid, countedon) compress';
-    --DBMS_STATS.GATHER_TABLE_STATS(ownname => 'DWH', tabname => 'LEASROUTING_CONTACT_TMP', degree=>4);
+    execute immediate 'create index DWH.LEASROUTING_CONTACT_TMP_i01 on DWH.LEASROUTING_CONTACT_TMP (opportunityid, countedon) compress';
+    DBMS_STATS.GATHER_TABLE_STATS(ownname => 'DWH', tabname => 'LEASROUTING_CONTACT_TMP', degree=>4);
 exception
     when others then
         dm.u_log('create_CONTACT_TMP', 'error' ,sqlerrm);
@@ -243,8 +243,8 @@ begin
          where not l.timeslotstart is null
         ) where rn$ = 1
     !';
-    --execute immediate 'create index DWH.LEASROUTING_CRM_LEAD_TMP_i01 on DWH.LEASROUTING_CRM_LEAD_TMP (opportunityid, countedon) compress';
-    --DBMS_STATS.GATHER_TABLE_STATS(ownname => 'DWH', tabname => 'LEASROUTING_CRM_LEAD_TMP', degree=>4);
+    execute immediate 'create index DWH.LEASROUTING_CRM_LEAD_TMP_i01 on DWH.LEASROUTING_CRM_LEAD_TMP (opportunityid, countedon) compress';
+    DBMS_STATS.GATHER_TABLE_STATS(ownname => 'DWH', tabname => 'LEASROUTING_CRM_LEAD_TMP', degree=>4);
 exception
     when others then
         dm.u_log('create_CRM_LEAD_TMP', 'error' ,sqlerrm);
@@ -270,8 +270,8 @@ begin
          where not ag.timeslotstart is null
         ) where rn$ = 1
     !';
-    --execute immediate 'create index DWH.LEASROUT_NEW_ACCOUNTGR_TMP_i01 on DWH.LEASROUT_NEW_ACCOUNTGROUP_TMP (opportunityid, countedon) compress';
-    --DBMS_STATS.GATHER_TABLE_STATS(ownname => 'DWH', tabname => 'LEASROUT_NEW_ACCOUNTGROUP_TMP', degree=>4);
+    execute immediate 'create index DWH.LEASROUT_NEW_ACCOUNTGR_TMP_i01 on DWH.LEASROUT_NEW_ACCOUNTGROUP_TMP (opportunityid, countedon) compress';
+    DBMS_STATS.GATHER_TABLE_STATS(ownname => 'DWH', tabname => 'LEASROUT_NEW_ACCOUNTGROUP_TMP', degree=>4);
 exception
     when others then
         dm.u_log('create_NEW_ACCOUNTGROUP_TMP', 'error' ,sqlerrm);
@@ -307,8 +307,8 @@ begin
          where not hd.timeslotstart is null
         ) where rn$ = 1
     !';
-    --execute immediate 'create index DWH.LEASROUT_NEW_HUMANDOCS_TMP_i01 on DWH.LEASROUTING_NEW_HUMANDOCS_TMP (opportunityid, countedon) compress';
-    --DBMS_STATS.GATHER_TABLE_STATS(ownname => 'DWH', tabname => 'LEASROUTING_NEW_HUMANDOCS_TMP', degree=>4);
+    execute immediate 'create index DWH.LEASROUT_NEW_HUMANDOCS_TMP_i01 on DWH.LEASROUTING_NEW_HUMANDOCS_TMP (opportunityid, countedon) compress';
+    DBMS_STATS.GATHER_TABLE_STATS(ownname => 'DWH', tabname => 'LEASROUTING_NEW_HUMANDOCS_TMP', degree=>4);
 exception
     when others then
         dm.u_log('create_NEW_HUMANDOCS_TMP', 'error' ,sqlerrm);
@@ -334,8 +334,8 @@ begin
          where not rg.timeslotstart is null
         ) where rn$ = 1
     !';
-    --execute immediate 'create index DWH.LEASROUTING_RELLGROUP_TMP_i01 on DWH.LEASROUTING_RELLGROUP_TMP (opportunityid, countedon) compress';
-    --DBMS_STATS.GATHER_TABLE_STATS(ownname => 'DWH', tabname => 'LEASROUTING_RELLGROUP_TMP', degree=>4);
+    execute immediate 'create index DWH.LEASROUTING_RELLGROUP_TMP_i01 on DWH.LEASROUTING_RELLGROUP_TMP (opportunityid, countedon) compress';
+    DBMS_STATS.GATHER_TABLE_STATS(ownname => 'DWH', tabname => 'LEASROUTING_RELLGROUP_TMP', degree=>4);
 exception
     when others then
         dm.u_log('create_RELLGROUP_TMP', 'error' ,sqlerrm);
@@ -372,8 +372,8 @@ begin
       and (t.SUBJECT like '%КЛАС по ЛС%' or t.SUBJECT like  '%КЛАС по 4ой группе%') and VALID_TO_DTTM = to_date('2400-01-01', 'yyyy-mm-dd')
     ) t
     !';
-    --execute immediate 'create index DWH.LEASROUT_TASKNEW_10009_TMP_i01 on DWH.LEASROUT_TASKNEW_10009_TMP(opportunityid, COUNTEDON, rn) compress 2';
-    --DBMS_STATS.GATHER_TABLE_STATS(ownname => 'DWH', tabname => 'LEASROUT_TASKNEW_10009_TMP', degree=>4);
+    execute immediate 'create index DWH.LEASROUT_TASKNEW_10009_TMP_i01 on DWH.LEASROUT_TASKNEW_10009_TMP(opportunityid, COUNTEDON, rn) compress 2';
+    DBMS_STATS.GATHER_TABLE_STATS(ownname => 'DWH', tabname => 'LEASROUT_TASKNEW_10009_TMP', degree=>4);
 exception
     when others then
         dm.u_log('create_TASKNEW_10009_TMP', 'error' ,sqlerrm);
@@ -410,8 +410,8 @@ begin
       and (t.SUBJECT like '%КУФР%' and t.SUBJECT like '%Одобрение%') and VALID_TO_DTTM = to_date('2400-01-01', 'yyyy-mm-dd')
     ) t
     !';
-    --execute immediate 'create index DWH.LEASROUT_TASK_10009KUF_TMP_i01 on DWH.LEASROUT_TASKNEW_10009KUF_TMP(opportunityid, COUNTEDON, rn) compress 2';
-    --DBMS_STATS.GATHER_TABLE_STATS(ownname => 'DWH', tabname => 'LEASROUT_TASKNEW_10009KUF_TMP', degree=>4);
+    execute immediate 'create index DWH.LEASROUT_TASK_10009KUF_TMP_i01 on DWH.LEASROUT_TASKNEW_10009KUF_TMP(opportunityid, COUNTEDON, rn) compress 2';
+    DBMS_STATS.GATHER_TABLE_STATS(ownname => 'DWH', tabname => 'LEASROUT_TASKNEW_10009KUF_TMP', degree=>4);
 exception
     when others then
         dm.u_log('create_TASKNEW_10009KUF_TMP', 'error' ,sqlerrm);
@@ -447,8 +447,8 @@ begin
     where t.new_status = 100000002 and t.statecode = 1 and (t.new_type = 100000011 or t.new_type = 100000028) and VALID_TO_DTTM = to_date('2400-01-01', 'yyyy-mm-dd')
     ) t
     !';
-    --execute immediate 'create index DWH.LEASROUT_TASKNEW_10011_TMP_i01 on DWH.LEASROUT_TASKNEW_10011_TMP(opportunityid, COUNTEDON, rn) compress 2';
-    --DBMS_STATS.GATHER_TABLE_STATS(ownname => 'DWH', tabname => 'LEASROUT_TASKNEW_10011_TMP', degree=>4);
+    execute immediate 'create index DWH.LEASROUT_TASKNEW_10011_TMP_i01 on DWH.LEASROUT_TASKNEW_10011_TMP(opportunityid, COUNTEDON, rn) compress 2';
+    DBMS_STATS.GATHER_TABLE_STATS(ownname => 'DWH', tabname => 'LEASROUT_TASKNEW_10011_TMP', degree=>4);
 exception
     when others then
         dm.u_log('create_TASKNEW_10011_TMP', 'error' ,sqlerrm);
@@ -485,8 +485,8 @@ begin
     where t.new_status = 100000002 and t.statecode = 1 and (t.new_type = 100000015 or t.new_type = 100000026) and VALID_TO_DTTM = to_date('2400-01-01', 'yyyy-mm-dd')
     ) t
     !';
-    --execute immediate 'create index DWH.LEASROUT_TASKNEW_10015_TMP_i01 on DWH.LEASROUT_TASKNEW_10015_TMP(opportunityid, COUNTEDON, rn) compress 2';
-    --DBMS_STATS.GATHER_TABLE_STATS(ownname => 'DWH', tabname => 'LEASROUT_TASKNEW_10015_TMP', degree=>4);
+    execute immediate 'create index DWH.LEASROUT_TASKNEW_10015_TMP_i01 on DWH.LEASROUT_TASKNEW_10015_TMP(opportunityid, COUNTEDON, rn) compress 2';
+    DBMS_STATS.GATHER_TABLE_STATS(ownname => 'DWH', tabname => 'LEASROUT_TASKNEW_10015_TMP', degree=>4);
 exception
     when others then
         dm.u_log('create_TASKNEW_10015_TMP', 'error' ,sqlerrm);
@@ -522,8 +522,8 @@ begin
         where t.new_status = 100000002 and t.statecode = 1 and t.new_type = 100000016 and VALID_TO_DTTM = to_date('2400-01-01', 'yyyy-mm-dd')
     ) t
     !';
-    --execute immediate 'create index DWH.LEASROUT_TASKNEW_10016_TMP_i01 on DWH.LEASROUT_TASKNEW_10016_TMP(opportunityid, COUNTEDON, rn) compress 2';
-    --DBMS_STATS.GATHER_TABLE_STATS(ownname => 'DWH', tabname => 'LEASROUT_TASKNEW_10016_TMP', degree=>4);
+    execute immediate 'create index DWH.LEASROUT_TASKNEW_10016_TMP_i01 on DWH.LEASROUT_TASKNEW_10016_TMP(opportunityid, COUNTEDON, rn) compress 2';
+    DBMS_STATS.GATHER_TABLE_STATS(ownname => 'DWH', tabname => 'LEASROUT_TASKNEW_10016_TMP', degree=>4);
 exception
     when others then
         dm.u_log('create_TASKNEW_10016_TMP', 'error' ,sqlerrm);
@@ -559,8 +559,8 @@ begin
         where t.new_status = 100000002 and t.statecode = 1 and t.new_type = 100000029 and VALID_TO_DTTM = to_date('2400-01-01', 'yyyy-mm-dd')
     ) t
     !';
-    --execute immediate 'create index DWH.LEASROUT_TASKNEW_10029_TMP_i01 on DWH.LEASROUT_TASKNEW_10029_TMP(opportunityid, COUNTEDON, rn) compress 2';
-    --DBMS_STATS.GATHER_TABLE_STATS(ownname => 'DWH', tabname => 'LEASROUT_TASKNEW_10029_TMP', degree=>4);
+    execute immediate 'create index DWH.LEASROUT_TASKNEW_10029_TMP_i01 on DWH.LEASROUT_TASKNEW_10029_TMP(opportunityid, COUNTEDON, rn) compress 2';
+    DBMS_STATS.GATHER_TABLE_STATS(ownname => 'DWH', tabname => 'LEASROUT_TASKNEW_10029_TMP', degree=>4);
 exception
     when others then
         dm.u_log('create_TASKNEW_10029_TMP', 'error' ,sqlerrm);
@@ -596,8 +596,8 @@ begin
         where t.new_status = 100000002 and t.statecode = 1 and t.new_type = 100000031 and VALID_TO_DTTM = to_date('2400-01-01', 'yyyy-mm-dd')
     ) t
     !';
-    --execute immediate 'create index DWH.LEASROUT_TASKNEW_10031_TMP_i01 on DWH.LEASROUT_TASKNEW_10031_TMP(opportunityid, COUNTEDON, rn) compress 2';
-    --DBMS_STATS.GATHER_TABLE_STATS(ownname => 'DWH', tabname => 'LEASROUT_TASKNEW_10031_TMP', degree=>4);
+    execute immediate 'create index DWH.LEASROUT_TASKNEW_10031_TMP_i01 on DWH.LEASROUT_TASKNEW_10031_TMP(opportunityid, COUNTEDON, rn) compress 2';
+    DBMS_STATS.GATHER_TABLE_STATS(ownname => 'DWH', tabname => 'LEASROUT_TASKNEW_10031_TMP', degree=>4);
 exception
     when others then
         dm.u_log('create_TASKNEW_10031_TMP', 'error' ,sqlerrm);
@@ -634,8 +634,8 @@ begin
                 and t.SUBJECT like '%ПИ Повторное подтверждение%' and VALID_TO_DTTM = to_date('2400-01-01', 'yyyy-mm-dd')
     ) t
     !';
-    --execute immediate 'create index DWH.LEASROUT_TASKNEW_10032_TMP_i01 on DWH.LEASROUT_TASKNEW_100032_TMP(opportunityid, COUNTEDON, rn) compress 2';
-    --DBMS_STATS.GATHER_TABLE_STATS(ownname => 'DWH', tabname => 'LEASROUT_TASKNEW_100032_TMP', degree=>4);
+    execute immediate 'create index DWH.LEASROUT_TASKNEW_10032_TMP_i01 on DWH.LEASROUT_TASKNEW_100032_TMP(opportunityid, COUNTEDON, rn) compress 2';
+    DBMS_STATS.GATHER_TABLE_STATS(ownname => 'DWH', tabname => 'LEASROUT_TASKNEW_100032_TMP', degree=>4);
 exception
     when others then
         dm.u_log('create_TASKNEW_100032_TMP', 'error' ,sqlerrm);
@@ -672,8 +672,8 @@ begin
                 and t.SUBJECT like '%ПИ Повторное одобрение%' and VALID_TO_DTTM = to_date('2400-01-01', 'yyyy-mm-dd')
     ) t
     !';
-    --execute immediate 'create index DWH.LEASROUT_TASKN_10032OD_TMP_i01 on DWH.LEASROUT_TASKNEW_100032OD_TMP(opportunityid, COUNTEDON, rn) compress 2';
-    --DBMS_STATS.GATHER_TABLE_STATS(ownname => 'DWH', tabname => 'LEASROUT_TASKNEW_100032OD_TMP', degree=>4);
+    execute immediate 'create index DWH.LEASROUT_TASKN_10032OD_TMP_i01 on DWH.LEASROUT_TASKNEW_100032OD_TMP(opportunityid, COUNTEDON, rn) compress 2';
+    DBMS_STATS.GATHER_TABLE_STATS(ownname => 'DWH', tabname => 'LEASROUT_TASKNEW_100032OD_TMP', degree=>4);
 exception
     when others then
         dm.u_log('create_TASKNEW_100032OD_TMP', 'error' ,sqlerrm);
@@ -710,8 +710,8 @@ begin
         where t.new_status = 100000002 and t.statecode = 1 and t.new_type = 100000045 and VALID_TO_DTTM = to_date('2400-01-01', 'yyyy-mm-dd')
     ) t
     !';
-    --execute immediate 'create index DWH.LEASROUT_TASKNEW_10045_TMP_i01 on DWH.LEASROUT_TASKNEW_100000045_TMP(opportunityid, COUNTEDON, rn) compress 2';
-    --DBMS_STATS.GATHER_TABLE_STATS(ownname => 'DWH', tabname => 'LEASROUT_TASKNEW_100000045_TMP', degree=>4);
+    execute immediate 'create index DWH.LEASROUT_TASKNEW_10045_TMP_i01 on DWH.LEASROUT_TASKNEW_100000045_TMP(opportunityid, COUNTEDON, rn) compress 2';
+    DBMS_STATS.GATHER_TABLE_STATS(ownname => 'DWH', tabname => 'LEASROUT_TASKNEW_100000045_TMP', degree=>4);
 exception
     when others then
         dm.u_log('create_TASKNEW_100000045_TMP', 'error' ,sqlerrm);
@@ -726,6 +726,7 @@ begin
     insert /*+ append sys_dl_cursor nologging */ into DM.LEASROUTING_MODELS
     (
         SNAPSHOT_DT,
+        opportunityid,
         ACCOUNTID,
         CREATEDON,
         EMAILADDRESS1,
@@ -948,6 +949,7 @@ begin
     )
     select /*+ parallel(4) */
         :p_SNAPSHOT_DT SNAPSHOT_DT
+            ,r.opportunityid
             ,a.ACCOUNTID
             ,a.CREATEDON
             ,a.EMAILADDRESS1
@@ -1365,7 +1367,7 @@ end;
 
 procedure drop_temp is
 begin
-    dbms_application_info.set_action(action_name => 'truncate_temp');
+    dbms_application_info.set_action(action_name => 'drop_temp');
     drop_table('DWH','LEASROUTING_RMD_TMP');
     drop_table('DWH','LEASROUTING_OPPORTUNITY_TMP');
     drop_table('DWH','LEASROUTING_ACCOUNT_TMP');
@@ -1386,7 +1388,7 @@ begin
     drop_table('DWH','LEASROUT_TASKNEW_100000045_TMP');
 exception
     when others then
-        dm.u_log('truncate_temp', 'error' ,sqlerrm);
+        dm.u_log('drop_temp', 'error' ,sqlerrm);
         raise;
 end;
 
@@ -1417,7 +1419,9 @@ begin
 
     insert_LEASROUTING_MODELS;
     commit;
-    drop_temp;
+    if not p_develop_mode then
+        drop_temp;
+    end if;
     dm.u_log(GC_PROC_NAME,'END','Расчет сформирован');
 exception
     when others then
