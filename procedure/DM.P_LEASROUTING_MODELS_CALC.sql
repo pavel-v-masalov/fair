@@ -348,9 +348,12 @@ begin
     drop_table('DWH', 'LEASROUT_TASKNEW_10009_TMP');
     execute immediate q'!
     create table DWH.LEASROUT_TASKNEW_10009_TMP nologging as
-    select /*+ PARALLEL(4) */ t.*, max(t.rn) over (partition by opportunityid, COUNTEDON) rn_m from (
+    select /*+ PARALLEL(4) */ t.*, max(t.rn) over (partition by opportunityid, COUNTEDON) rn_m,
+           case when CREATEDON >= COUNTEDON and CREATEDON < COUNTEDON2 then 1 else 0 end start_flg,
+           case when ACTUALEND >= COUNTEDON and ACTUALEND < COUNTEDON2 then 1 else 0 end end_flg
+       from (
        select
-            r.opportunityid, r.COUNTEDON,
+            r.opportunityid, r.COUNTEDON,r.countedon2,
             row_number() over (partition by r.opportunityid, r.countedon order by 1 asc) rn,
            ACTIVITYID,
             ACTUALEND,
@@ -386,9 +389,12 @@ begin
     drop_table('DWH', 'LEASROUT_TASKNEW_10009KUF_TMP');
     execute immediate q'!
     create table DWH.LEASROUT_TASKNEW_10009KUF_TMP nologging as
-    select /*+ PARALLEL(4) */ t.*, max(t.rn) over (partition by opportunityid, COUNTEDON) rn_m from (
+    select /*+ PARALLEL(4) */ t.*, max(t.rn) over (partition by opportunityid, COUNTEDON) rn_m,
+           case when CREATEDON >= COUNTEDON and CREATEDON < COUNTEDON2 then 1 else 0 end start_flg,
+           case when ACTUALEND >= COUNTEDON and ACTUALEND < COUNTEDON2 then 1 else 0 end end_flg
+        from (
         select
-            r.opportunityid, r.COUNTEDON,
+            r.opportunityid, r.COUNTEDON,r.countedon2,
             row_number() over (partition by r.opportunityid, r.countedon order by 1 asc) rn,
             ACTIVITYID,
             ACTUALEND,
@@ -424,9 +430,12 @@ begin
     drop_table('DWH', 'LEASROUT_TASKNEW_10011_TMP');
     execute immediate q'!
     create table DWH.LEASROUT_TASKNEW_10011_TMP nologging as
-    select /*+ PARALLEL(4) */ t.*, max(t.rn) over (partition by opportunityid, COUNTEDON) rn_m from (
+    select /*+ PARALLEL(4) */ t.*, max(t.rn) over (partition by opportunityid, COUNTEDON) rn_m,
+           case when CREATEDON >= COUNTEDON and CREATEDON < COUNTEDON2 then 1 else 0 end start_flg,
+           case when ACTUALEND >= COUNTEDON and ACTUALEND < COUNTEDON2 then 1 else 0 end end_flg
+        from (
         select
-            r.opportunityid, r.COUNTEDON,
+            r.opportunityid, r.COUNTEDON,r.countedon2,
             row_number() over (partition by r.opportunityid, r.countedon order by 1 asc) rn,
             ACTIVITYID,
             ACTUALEND,
@@ -461,9 +470,12 @@ begin
     drop_table('DWH', 'LEASROUT_TASKNEW_10015_TMP');
     execute immediate q'!
     create table DWH.LEASROUT_TASKNEW_10015_TMP nologging as
-    select /*+ PARALLEL(4) */ t.*, max(t.rn) over (partition by opportunityid, COUNTEDON) rn_m from (
+    select /*+ PARALLEL(4) */ t.*, max(t.rn) over (partition by opportunityid, COUNTEDON) rn_m,
+           case when CREATEDON >= COUNTEDON and CREATEDON < COUNTEDON2 then 1 else 0 end start_flg,
+           case when ACTUALEND >= COUNTEDON and ACTUALEND < COUNTEDON2 then 1 else 0 end end_flg
+        from (
         select
-            r.opportunityid, r.COUNTEDON,
+            r.opportunityid, r.COUNTEDON,r.countedon2,
             row_number() over (partition by r.opportunityid, r.countedon order by 1 asc) rn,
             ACTIVITYID,
             ACTUALEND,
@@ -499,9 +511,12 @@ begin
     drop_table('DWH','LEASROUT_TASKNEW_10016_TMP');
     execute immediate q'!
     create table DWH.LEASROUT_TASKNEW_10016_TMP nologging as
-    select /*+ PARALLEL(4) */ t.*, max(t.rn) over (partition by opportunityid, COUNTEDON) rn_m from (
+    select /*+ PARALLEL(4) */ t.*, max(t.rn) over (partition by opportunityid, COUNTEDON) rn_m,
+           case when CREATEDON >= COUNTEDON and CREATEDON < COUNTEDON2 then 1 else 0 end start_flg,
+           case when ACTUALEND >= COUNTEDON and ACTUALEND < COUNTEDON2 then 1 else 0 end end_flg
+        from (
         select
-            r.opportunityid, r.COUNTEDON,
+            r.opportunityid, r.COUNTEDON,r.countedon2,
             row_number() over (partition by r.opportunityid, r.countedon order by 1 asc) rn,
             ACTIVITYID,
             ACTUALEND,
@@ -536,9 +551,12 @@ begin
     drop_table('DWH', 'LEASROUT_TASKNEW_10029_TMP');
     execute immediate q'!
     create table DWH.LEASROUT_TASKNEW_10029_TMP nologging as
-    select /*+ PARALLEL(4) */ t.*, max(t.rn) over (partition by opportunityid, COUNTEDON) rn_m from (
+    select /*+ PARALLEL(4) */ t.*, max(t.rn) over (partition by opportunityid, COUNTEDON) rn_m,
+           case when CREATEDON >= COUNTEDON and CREATEDON < COUNTEDON2 then 1 else 0 end start_flg,
+           case when ACTUALEND >= COUNTEDON and ACTUALEND < COUNTEDON2 then 1 else 0 end end_flg
+        from (
         select
-            r.opportunityid, r.COUNTEDON,
+            r.opportunityid, r.COUNTEDON,r.countedon2,
             row_number() over (partition by r.opportunityid, r.countedon order by 1 asc) rn,
             ACTIVITYID,
             ACTUALEND,
@@ -573,9 +591,12 @@ begin
     drop_table('DWH','LEASROUT_TASKNEW_10031_TMP');
     execute immediate q'!
     create table DWH.LEASROUT_TASKNEW_10031_TMP nologging as
-    select /*+ PARALLEL(4) */ t.*, max(t.rn) over (partition by opportunityid, COUNTEDON) rn_m from (
+    select /*+ PARALLEL(4) */ t.*, max(t.rn) over (partition by opportunityid, COUNTEDON) rn_m,
+           case when CREATEDON >= COUNTEDON and CREATEDON < COUNTEDON2 then 1 else 0 end start_flg,
+           case when ACTUALEND >= COUNTEDON and ACTUALEND < COUNTEDON2 then 1 else 0 end end_flg
+        from (
         select
-            r.opportunityid, r.COUNTEDON,
+            r.opportunityid, r.COUNTEDON,r.countedon2,
             row_number() over (partition by r.opportunityid, r.countedon order by 1 asc) rn,
             ACTIVITYID,
             ACTUALEND,
@@ -610,9 +631,12 @@ begin
     drop_table('DWH','LEASROUT_TASKNEW_100032_TMP');
     execute immediate q'!
     create table DWH.LEASROUT_TASKNEW_100032_TMP nologging as
-    select /*+ PARALLEL(4) */ t.*, max(t.rn) over (partition by opportunityid, COUNTEDON) rn_m from (
+    select /*+ PARALLEL(4) */ t.*, max(t.rn) over (partition by opportunityid, COUNTEDON) rn_m,
+           case when CREATEDON >= COUNTEDON and CREATEDON < COUNTEDON2 then 1 else 0 end start_flg,
+           case when ACTUALEND >= COUNTEDON and ACTUALEND < COUNTEDON2 then 1 else 0 end end_flg
+        from (
         select
-            r.opportunityid, r.COUNTEDON,
+            r.opportunityid, r.COUNTEDON,r.countedon2,
             row_number() over (partition by r.opportunityid, r.countedon order by 1 asc) rn,
             ACTIVITYID,
             ACTUALEND,
@@ -648,9 +672,12 @@ begin
     drop_table('DWH','LEASROUT_TASKNEW_100032OD_TMP');
     execute immediate q'!
     create table DWH.LEASROUT_TASKNEW_100032OD_TMP nologging as
-    select /*+ PARALLEL(4) */ t.*, max(t.rn) over (partition by opportunityid, COUNTEDON) rn_m from (
+    select /*+ PARALLEL(4) */ t.*, max(t.rn) over (partition by opportunityid, COUNTEDON) rn_m,
+           case when CREATEDON >= COUNTEDON and CREATEDON < COUNTEDON2 then 1 else 0 end start_flg,
+           case when ACTUALEND >= COUNTEDON and ACTUALEND < COUNTEDON2 then 1 else 0 end end_flg
+        from (
         select
-            r.opportunityid, r.COUNTEDON,
+            r.opportunityid, r.COUNTEDON,r.countedon2,
             row_number() over (partition by r.opportunityid, r.countedon order by 1 asc) rn,
             ACTIVITYID,
             ACTUALEND,
@@ -686,9 +713,12 @@ begin
     drop_table('DWH','LEASROUT_TASKNEW_100000045_TMP');
     execute immediate q'!
     create table DWH.LEASROUT_TASKNEW_100000045_TMP nologging as
-    select /*+ PARALLEL(4) */ t.*, max(t.rn) over (partition by opportunityid, COUNTEDON) rn_m from (
+    select /*+ PARALLEL(4) */ t.*, max(t.rn) over (partition by opportunityid, COUNTEDON) rn_m,
+           case when CREATEDON >= COUNTEDON and CREATEDON < COUNTEDON2 then 1 else 0 end start_flg,
+           case when ACTUALEND >= COUNTEDON and ACTUALEND < COUNTEDON2 then 1 else 0 end end_flg
+        from (
         select
-            r.opportunityid, r.COUNTEDON,
+            r.opportunityid, r.COUNTEDON,r.countedon2,
             row_number() over (partition by r.opportunityid, r.countedon order by 1 asc) rn,
             ACTIVITYID,
             ACTUALEND,
@@ -808,6 +838,8 @@ begin
         -- tasks
         VERACTIVITYID,
         VER_NO,
+        verstart_flg,
+        verend_flg,
         VERACTUALEND,
         VERACTUALSTART,
         VERCREATEDON,
@@ -822,6 +854,8 @@ begin
         VERNEW_UZDL,
         RECONFIRMATIONACTIVITYID,
         RECONFIRMATION_NO,
+        RECONFIRMATIONstart_flg,
+        RECONFIRMATIONend_flg,
         RECONFIRMATIONACTUALEND,
         RECONFIRMATIONACTUALSTART,
         RECONFIRMATIONCREATEDON,
@@ -836,6 +870,8 @@ begin
         RECONFIRMATIONNEW_UZDL,
         EXPOYBACTIVITYID,
         EXPOYB_NO,
+        EXPOYBstart_flg,
+        EXPOYBend_flg,
         EXPOYBACTUALEND,
         EXPOYBACTUALSTART,
         EXPOYBCREATEDON,
@@ -850,6 +886,8 @@ begin
         EXPOYBNEW_UZDL,
         REPOYBACTIVITYID,
         REPOYB_NO,
+        REPOYBstart_flg,
+        REPOYBend_flg,
         REPOYBACTUALEND,
         REPOYBACTUALSTART,
         REPOYBCREATEDON,
@@ -864,6 +902,8 @@ begin
         REPOYBNEW_UZDL,
         EXPUAKRACTIVITYID,
         EXPUAKR_NO,
+        EXPUAKRstart_flg,
+        EXPUAKRend_flg,
         EXPUAKRACTUALEND,
         EXPUAKRACTUALSTART,
         EXPUAKRCREATEDON,
@@ -878,6 +918,8 @@ begin
         EXPUAKRNEW_UZDL,
         REPUAKRACTIVITYID,
         REPUAKR_NO,
+        REPUAKRstart_flg,
+        REPUAKRend_flg,
         REPUAKRACTUALEND,
         REPUAKRACTUALSTART,
         REPUAKRCREATEDON,
@@ -892,6 +934,8 @@ begin
         REPUAKRNEW_UZDL,
         UNDERWRITACTIVITYID,
         UNDERWRIT_NO,
+        UNDERWRITstart_flg,
+        UNDERWRITend_flg,
         UNDERWRITACTUALEND,
         UNDERWRITACTUALSTART,
         UNDERWRITCREATEDON,
@@ -904,36 +948,42 @@ begin
         UNDERWRITNEW_TYPE,
         UNDERWRITNEW_TYPENAME,
         UNDERWRITNEW_UZDL,
-        SOLUTIONDESACTIVITYID,
-        SOLUTIONDES_NO,
-        SOLUTIONDESACTUALEND,
-        SOLUTIONDESACTUALSTART,
-        SOLUTIONDESCREATEDON,
-        SOLUTIONDESNEW_APPROVALRESULT,
-        SOLDESNEW_APPROVALRESULTNAME,
-        SOLUTIONDESNEW_COMMENTS,
-        SOLDESNEW_COUNTER_FULLTIME,
-        SOLNDESNEW_COUNTER_WORKTIME,
-        SOLUTIONDESNEW_HISTORY,
-        SOLUTIONDESNEW_TYPE,
-        SOLUTIONDESNEW_TYPENAME,
-        SOLUTIONDESNEW_UZDL,
-        SOLUTIONDESKUFRACTIVITYID,
-        SOLUTIONDESKUFR_NO,
-        SOLUTIONDESKUFRACTUALEND,
-        SOLUTIONDESKUFRACTUALSTART,
-        SOLUTIONDESKUFRCREATEDON,
-        SOLDESKUFRNEW_APPROVALRESULT,
-        SOLDESKUFRNEW_APPROVALRESULTNM,
-        SOLUTIONDESKUFRNEW_COMMENTS,
-        SOLDESKUFRNEW_COUNTER_FULLTIME,
-        SOLDESKUFRNEW_COUNTER_WORKTIME,
-        SOLUTIONDESKUFRNEW_HISTORY,
-        SOLUTIONDESKUFRNEW_TYPE,
-        SOLUTIONDESKUFRNEW_TYPENAME,
-        SOLUTIONDESKUFRNEW_UZDL,
+        klassACTIVITYID,
+        klass_NO,
+        klassstart_flg,
+        klassend_flg,
+        klassACTUALEND,
+        klassACTUALSTART,
+        klassCREATEDON,
+        klassNEW_APPROVALRESULT,
+        klassNEW_APPROVALRESULTNAME,
+        klassNEW_COMMENTS,
+        klassNEW_COUNTER_FULLTIME,
+        klassNEW_COUNTER_WORKTIME,
+        klassNEW_HISTORY,
+        klassNEW_TYPE,
+        klassNEW_TYPENAME,
+        klassNEW_UZDL,
+        KUFRACTIVITYID,
+        KUFR_NO,
+        kufrstart_flg,
+        kufrend_flg,
+        KUFRACTUALEND,
+        KUFRACTUALSTART,
+        KUFRCREATEDON,
+        KUFRNEW_APPROVALRESULT,
+        KUFRNEW_APPROVALRESULTNM,
+        KUFRNEW_COMMENTS,
+        KUFRNEW_COUNTER_FULLTIME,
+        KUFRNEW_COUNTER_WORKTIME,
+        KUFRNEW_HISTORY,
+        KUFRNEW_TYPE,
+        KUFRNEW_TYPENAME,
+        KUFRNEW_UZDL,
         REAPPROVACTIVITYID,
         REAPPROV_NO,
+        REAPPROVstart_flg,
+        REAPPROVend_flg,
         REAPPROVACTUALEND,
         REAPPROVACTUALSTART,
         REAPPROVCREATEDON,
@@ -949,35 +999,35 @@ begin
     )
     select /*+ parallel(4) */
         :p_SNAPSHOT_DT SNAPSHOT_DT
-            ,r.opportunityid
-            ,a.ACCOUNTID
-            ,a.CREATEDON
-            ,a.EMAILADDRESS1
-            ,a.INDUSTRYCODENAME
-            ,a.NAME
-            ,a.NEW_ACCOUNTINDUCTRYNAME
-            ,a.NEW_BLACK_LIST_DATE
-            ,a.NEW_CEOCHANGENAME
-            ,a.NEW_CHEKVERIFICATION
-            ,a.NEW_COMPANYSITE
-            ,a.NEW_EXPLOITATIONPL1
-            ,a.NEW_INCIDENTSOURCENAME
-            ,a.NEW_INN
-            ,a.NEW_KY_CUSTOMER
-            ,a.NEW_KY_SPESHLPR
-            ,a.NEW_LEGALORGANIZATIONALFORMNAM
-            ,a.NEW_MOBILEPHONE
-            ,a.NEW_OGRN
-            ,a.NEW_OKVEDIDNAME
-            ,a.NEW_PHYSICALINN
-            ,a.NEW_REGISTRATIONADDRESS
-            ,a.NEW_REGISTRATIONDATE
-            ,a.PRIMARYCONTACTID
-            ,a.PRIMARYCONTACTIDNAME
-            ,a.WEBSITEURL
-            ,rg.RELGROUPS
+        ,r.opportunityid
+        ,a.ACCOUNTID
+        ,a.CREATEDON
+        ,a.EMAILADDRESS1
+        ,a.INDUSTRYCODENAME
+        ,a.NAME
+        ,a.NEW_ACCOUNTINDUCTRYNAME
+        ,a.NEW_BLACK_LIST_DATE
+        ,a.NEW_CEOCHANGENAME
+        ,a.NEW_CHEKVERIFICATION
+        ,a.NEW_COMPANYSITE
+        ,a.NEW_EXPLOITATIONPL1
+        ,a.NEW_INCIDENTSOURCENAME
+        ,a.NEW_INN
+        ,a.NEW_KY_CUSTOMER
+        ,a.NEW_KY_SPESHLPR
+        ,a.NEW_LEGALORGANIZATIONALFORMNAM
+        ,a.NEW_MOBILEPHONE
+        ,a.NEW_OGRN
+        ,a.NEW_OKVEDIDNAME
+        ,a.NEW_PHYSICALINN
+        ,a.NEW_REGISTRATIONADDRESS
+        ,a.NEW_REGISTRATIONDATE
+        ,a.PRIMARYCONTACTID
+        ,a.PRIMARYCONTACTIDNAME
+        ,a.WEBSITEURL
+        ,rg.RELGROUPS
             ,rg.RELMAX
-            ,o.NEW_AGENTID
+        ,o.NEW_AGENTID
             ,o.NEW_ALLEXPRETISETASKSCLOSED
             ,o.NEW_APPROVALRESULTNAME
             ,o.NEW_FACTADRESS
@@ -992,29 +1042,29 @@ begin
             ,o.NEW_TOTALFINANCINGSUM
             ,o.NEW_TOTALFINANCINGSUM_EXPRESS
             ,o.NEW_TOTALSUMDEALPERIOD
-            ,ag.NEW_ACCOUNTGROUPID
+        ,ag.NEW_ACCOUNTGROUPID
             ,ag.NEW_NAME
-            ,c.BIRTHDATE
-            ,c.CONTACTID
-            ,c.FIRSTNAME
-            ,c.GENDERCODENAME
-            ,c.JOBTITLE
-            ,c.MIDDLENAME
-            ,c.MOBILEPHONE
-            ,c.NEW_ADDRESS
-            ,c.NEW_CONTACTTYPENAME
-            ,c.VTBL_SCORINGSCORE
-            ,hd.NEW_DOCNUMBER
-            ,hd.NEW_DOCTYPE
-            ,hd.NEW_DOCTYPENAME
-            ,hd.NEW_SERIA
-            ,hd.NEW_STARTDATE
-            ,hd.NEW_WHENGIVE
-            ,hd.NEW_WHOGIVE
-            ,l.LEADID
+        ,c.BIRTHDATE
+        ,c.CONTACTID
+        ,c.FIRSTNAME
+        ,c.GENDERCODENAME
+        ,c.JOBTITLE
+        ,c.MIDDLENAME
+        ,c.MOBILEPHONE
+        ,c.NEW_ADDRESS
+        ,c.NEW_CONTACTTYPENAME
+        ,c.VTBL_SCORINGSCORE
+        ,hd.NEW_DOCNUMBER
+        ,hd.NEW_DOCTYPE
+        ,hd.NEW_DOCTYPENAME
+        ,hd.NEW_SERIA
+        ,hd.NEW_STARTDATE
+        ,hd.NEW_WHENGIVE
+        ,hd.NEW_WHOGIVE
+        ,l.LEADID
             ,l.NEW_REF_ACCOUNTNAME
             ,l.NEW_WEB
-            ,r.COUNTEDON
+        ,r.COUNTEDON
             ,r.CREDITMODELISCOUNTABLE
             ,r.FINANCESUM
             ,r.CREDITMODELRESULT
@@ -1029,335 +1079,375 @@ begin
             ,r.ISPRESCORINGCALL
             ,r.model_settings
         -- tasks
-            , r.VERACTIVITYID
-            , r.VER_NO
-            , r.VERACTUALEND
-            , r.VERACTUALSTART
-            , r.VERCREATEDON
-            , r.VERNEW_APPROVALRESULT
-            , r.VERNEW_APPROVALRESULTNAME
-            , r.VERNEW_COMMENTS
-            , r.VERNEW_COUNTER_FULLTIME
-            , r.VERNEW_COUNTER_WORKTIME
-            , r.VERNEW_HISTORY
-            , r.VERNEW_TYPE
-            , r.VERNEW_TYPENAME
-            , r.VERNEW_UZDL
-            , r.RECONFIRMATIONACTIVITYID
-            , r.RECONFIRMATION_NO
-            , r.RECONFIRMATIONACTUALEND
-            , r.RECONFIRMATIONACTUALSTART
-            , r.RECONFIRMATIONCREATEDON
-            , r.RECONFIRMNEW_APPROVALRESULT
-            , r.RECONFIRMNEW_APPROVALRESULTNM
-            , r.RECONFIRMATIONNEW_COMMENTS
-            , r.RECONFIRMNEW_COUNTER_FULLTIME
-            , r.RECONFIRMNEW_COUNTER_WORKTIME
-            , r.RECONFIRMATIONNEW_HISTORY
-            , r.RECONFIRMATIONNEW_TYPE
-            , r.RECONFIRMATIONNEW_TYPENAME
-            , r.RECONFIRMATIONNEW_UZDL
-            , r.EXPOYBACTIVITYID
-            , r.EXPOYB_NO
-            , r.EXPOYBACTUALEND
-            , r.EXPOYBACTUALSTART
-            , r.EXPOYBCREATEDON
-            , r.EXPOYBNEW_APPROVALRESULT
-            , r.EXPOYBNEW_APPROVALRESULTNAME
-            , r.EXPOYBNEW_COMMENTS
-            , r.EXPOYBNEW_COUNTER_FULLTIME
-            , r.EXPOYBNEW_COUNTER_WORKTIME
-            , r.EXPOYBNEW_HISTORY
-            , r.EXPOYBNEW_TYPE
-            , r.EXPOYBNEW_TYPENAME
-            , r.EXPOYBNEW_UZDL
-            , r.REPOYBACTIVITYID
-            , r.REPOYB_NO
-            , r.REPOYBACTUALEND
-            , r.REPOYBACTUALSTART
-            , r.REPOYBCREATEDON
-            , r.REPOYBNEW_APPROVALRESULT
-            , r.REPOYBNEW_APPROVALRESULTNAME
-            , r.REPOYBNEW_COMMENTS
-            , r.REPOYBNEW_COUNTER_FULLTIME
-            , r.REPOYBNEW_COUNTER_WORKTIME
-            , r.REPOYBNEW_HISTORY
-            , r.REPOYBNEW_TYPE
-            , r.REPOYBNEW_TYPENAME
-            , r.REPOYBNEW_UZDL
-            , r.EXPUAKRACTIVITYID
-            , r.EXPUAKR_NO
-            , r.EXPUAKRACTUALEND
-            , r.EXPUAKRACTUALSTART
-            , r.EXPUAKRCREATEDON
-            , r.EXPUAKRNEW_APPROVALRESULT
-            , r.EXPUAKRNEW_APPROVALRESULTNAME
-            , r.EXPUAKRNEW_COMMENTS
-            , r.EXPUAKRNEW_COUNTER_FULLTIME
-            , r.EXPUAKRNEW_COUNTER_WORKTIME
-            , r.EXPUAKRNEW_HISTORY
-            , r.EXPUAKRNEW_TYPE
-            , r.EXPUAKRNEW_TYPENAME
-            , r.EXPUAKRNEW_UZDL
-            , r.REPUAKRACTIVITYID
-            , r.REPUAKR_NO
-            , r.REPUAKRACTUALEND
-            , r.REPUAKRACTUALSTART
-            , r.REPUAKRCREATEDON
-            , r.REPUAKRNEW_APPROVALRESULT
-            , r.REPUAKRNEW_APPROVALRESULTNAME
-            , r.REPUAKRNEW_COMMENTS
-            , r.REPUAKRNEW_COUNTER_FULLTIME
-            , r.REPUAKRNEW_COUNTER_WORKTIME
-            , r.REPUAKRNEW_HISTORY
-            , r.REPUAKRNEW_TYPE
-            , r.REPUAKRNEW_TYPENAME
-            , r.REPUAKRNEW_UZDL
-            , r.UNDERWRITACTIVITYID
-            , r.UNDERWRIT_NO
-            , r.UNDERWRITACTUALEND
-            , r.UNDERWRITACTUALSTART
-            , r.UNDERWRITCREATEDON
-            , r.UNDERWRITNEW_APPROVALRESULT
-            , r.UNDWRITNEW_APPROVALRESULTNAME
-            , r.UNDERWRITNEW_COMMENTS
-            , r.UNDERWRITNEW_COUNTER_FULLTIME
-            , r.UNDERWRITNEW_COUNTER_WORKTIME
-            , r.UNDERWRITNEW_HISTORY
-            , r.UNDERWRITNEW_TYPE
-            , r.UNDERWRITNEW_TYPENAME
-            , r.UNDERWRITNEW_UZDL
-            , r.SOLUTIONDESACTIVITYID
-            , r.SOLUTIONDES_NO
-            , r.SOLUTIONDESACTUALEND
-            , r.SOLUTIONDESACTUALSTART
-            , r.SOLUTIONDESCREATEDON
-            , r.SOLUTIONDESNEW_APPROVALRESULT
-            , r.SOLDESNEW_APPROVALRESULTNAME
-            , r.SOLUTIONDESNEW_COMMENTS
-            , r.SOLDESNEW_COUNTER_FULLTIME
-            , r.SOLNDESNEW_COUNTER_WORKTIME
-            , r.SOLUTIONDESNEW_HISTORY
-            , r.SOLUTIONDESNEW_TYPE
-            , r.SOLUTIONDESNEW_TYPENAME
-            , r.SOLUTIONDESNEW_UZDL
-            , r.SOLUTIONDESKUFRACTIVITYID
-            , r.SOLUTIONDESKUFR_NO
-            , r.SOLUTIONDESKUFRACTUALEND
-            , r.SOLUTIONDESKUFRACTUALSTART
-            , r.SOLUTIONDESKUFRCREATEDON
-            , r.SOLDESKUFRNEW_APPROVALRESULT
-            , r.SOLDESKUFRNEW_APPROVALRESULTNM
-            , r.SOLUTIONDESKUFRNEW_COMMENTS
-            , r.SOLDESKUFRNEW_COUNTER_FULLTIME
-            , r.SOLDESKUFRNEW_COUNTER_WORKTIME
-            , r.SOLUTIONDESKUFRNEW_HISTORY
-            , r.SOLUTIONDESKUFRNEW_TYPE
-            , r.SOLUTIONDESKUFRNEW_TYPENAME
-            , r.SOLUTIONDESKUFRNEW_UZDL
-            , r.REAPPROVACTIVITYID
-            , r.REAPPROV_NO
-            , r.REAPPROVACTUALEND
-            , r.REAPPROVACTUALSTART
-            , r.REAPPROVCREATEDON
-            , r.REAPPROVNEW_APPROVALRESULT
-            , r.REAPPROVNEW_APPROVALRESULTNAME
-            , r.REAPPROVNEW_COMMENTS
-            , r.REAPPROVNEW_COUNTER_FULLTIME
-            , r.REAPPROVNEW_COUNTER_WORKTIME
-            , r.REAPPROVNEW_HISTORY
-            , r.REAPPROVNEW_TYPE
-            , r.REAPPROVNEW_TYPENAME
-            , r.REAPPROVNEW_UZDL
+        , r.VERACTIVITYID
+        , r.VER_NO
+        , r.verstart_flg
+        , r.verend_flg
+        , r.VERACTUALEND
+        , r.VERACTUALSTART
+        , r.VERCREATEDON
+        , r.VERNEW_APPROVALRESULT
+        , r.VERNEW_APPROVALRESULTNAME
+        , r.VERNEW_COMMENTS
+        , r.VERNEW_COUNTER_FULLTIME
+        , r.VERNEW_COUNTER_WORKTIME
+        , r.VERNEW_HISTORY
+        , r.VERNEW_TYPE
+        , r.VERNEW_TYPENAME
+        , r.VERNEW_UZDL
+        , r.RECONFIRMATIONACTIVITYID
+        , r.RECONFIRMATION_NO
+        , r.RECONFIRMATIONstart_flg
+        , r.RECONFIRMATIONend_flg
+        , r.RECONFIRMATIONACTUALEND
+        , r.RECONFIRMATIONACTUALSTART
+        , r.RECONFIRMATIONCREATEDON
+        , r.RECONFIRMNEW_APPROVALRESULT
+        , r.RECONFIRMNEW_APPROVALRESULTNM
+        , r.RECONFIRMATIONNEW_COMMENTS
+        , r.RECONFIRMNEW_COUNTER_FULLTIME
+        , r.RECONFIRMNEW_COUNTER_WORKTIME
+        , r.RECONFIRMATIONNEW_HISTORY
+        , r.RECONFIRMATIONNEW_TYPE
+        , r.RECONFIRMATIONNEW_TYPENAME
+        , r.RECONFIRMATIONNEW_UZDL
+        , r.EXPOYBACTIVITYID
+        , r.EXPOYB_NO
+        , r.EXPOYBstart_flg
+        , r.EXPOYBend_flg
+        , r.EXPOYBACTUALEND
+        , r.EXPOYBACTUALSTART
+        , r.EXPOYBCREATEDON
+        , r.EXPOYBNEW_APPROVALRESULT
+        , r.EXPOYBNEW_APPROVALRESULTNAME
+        , r.EXPOYBNEW_COMMENTS
+        , r.EXPOYBNEW_COUNTER_FULLTIME
+        , r.EXPOYBNEW_COUNTER_WORKTIME
+        , r.EXPOYBNEW_HISTORY
+        , r.EXPOYBNEW_TYPE
+        , r.EXPOYBNEW_TYPENAME
+        , r.EXPOYBNEW_UZDL
+        , r.REPOYBACTIVITYID
+        , r.REPOYB_NO
+        , r.REPOYBstart_flg
+        , r.REPOYBend_flg
+        , r.REPOYBACTUALEND
+        , r.REPOYBACTUALSTART
+        , r.REPOYBCREATEDON
+        , r.REPOYBNEW_APPROVALRESULT
+        , r.REPOYBNEW_APPROVALRESULTNAME
+        , r.REPOYBNEW_COMMENTS
+        , r.REPOYBNEW_COUNTER_FULLTIME
+        , r.REPOYBNEW_COUNTER_WORKTIME
+        , r.REPOYBNEW_HISTORY
+        , r.REPOYBNEW_TYPE
+        , r.REPOYBNEW_TYPENAME
+        , r.REPOYBNEW_UZDL
+        , r.EXPUAKRACTIVITYID
+        , r.EXPUAKR_NO
+        , r.EXPUAKRstart_flg
+        , r.EXPUAKRend_flg
+        , r.EXPUAKRACTUALEND
+        , r.EXPUAKRACTUALSTART
+        , r.EXPUAKRCREATEDON
+        , r.EXPUAKRNEW_APPROVALRESULT
+        , r.EXPUAKRNEW_APPROVALRESULTNAME
+        , r.EXPUAKRNEW_COMMENTS
+        , r.EXPUAKRNEW_COUNTER_FULLTIME
+        , r.EXPUAKRNEW_COUNTER_WORKTIME
+        , r.EXPUAKRNEW_HISTORY
+        , r.EXPUAKRNEW_TYPE
+        , r.EXPUAKRNEW_TYPENAME
+        , r.EXPUAKRNEW_UZDL
+        , r.REPUAKRACTIVITYID
+        , r.REPUAKR_NO
+        , r.REPUAKRstart_flg
+        , r.REPUAKRend_flg
+        , r.REPUAKRACTUALEND
+        , r.REPUAKRACTUALSTART
+        , r.REPUAKRCREATEDON
+        , r.REPUAKRNEW_APPROVALRESULT
+        , r.REPUAKRNEW_APPROVALRESULTNAME
+        , r.REPUAKRNEW_COMMENTS
+        , r.REPUAKRNEW_COUNTER_FULLTIME
+        , r.REPUAKRNEW_COUNTER_WORKTIME
+        , r.REPUAKRNEW_HISTORY
+        , r.REPUAKRNEW_TYPE
+        , r.REPUAKRNEW_TYPENAME
+        , r.REPUAKRNEW_UZDL
+        , r.UNDERWRITACTIVITYID
+        , r.UNDERWRIT_NO
+        , r.UNDERWRITstart_flg
+        , r.UNDERWRITend_flg
+        , r.UNDERWRITACTUALEND
+        , r.UNDERWRITACTUALSTART
+        , r.UNDERWRITCREATEDON
+        , r.UNDERWRITNEW_APPROVALRESULT
+        , r.UNDWRITNEW_APPROVALRESULTNAME
+        , r.UNDERWRITNEW_COMMENTS
+        , r.UNDERWRITNEW_COUNTER_FULLTIME
+        , r.UNDERWRITNEW_COUNTER_WORKTIME
+        , r.UNDERWRITNEW_HISTORY
+        , r.UNDERWRITNEW_TYPE
+        , r.UNDERWRITNEW_TYPENAME
+        , r.UNDERWRITNEW_UZDL
+        , r.klassACTIVITYID
+        , r.klass_NO
+        , r.klassstart_flg
+        , r.klassend_flg
+        , r.klassACTUALEND
+        , r.klassACTUALSTART
+        , r.klassCREATEDON
+        , r.klassNEW_APPROVALRESULT
+        , r.klassNEW_APPROVALRESULTNAME
+        , r.klassNEW_COMMENTS
+        , r.klassNEW_COUNTER_FULLTIME
+        , r.klassNEW_COUNTER_WORKTIME
+        , r.klassNEW_HISTORY
+        , r.klassNEW_TYPE
+        , r.klassNEW_TYPENAME
+        , r.klassNEW_UZDL
+        , r.KUFRACTIVITYID
+        , r.KUFR_NO
+        , r.kufrstart_flg
+        , r.kufrend_flg
+        , r.KUFRACTUALEND
+        , r.KUFRACTUALSTART
+        , r.KUFRCREATEDON
+        , r.KUFRNEW_APPROVALRESULT
+        , r.KUFRNEW_APPROVALRESULTNM
+        , r.KUFRNEW_COMMENTS
+        , r.KUFRNEW_COUNTER_FULLTIME
+        , r.KUFRNEW_COUNTER_WORKTIME
+        , r.KUFRNEW_HISTORY
+        , r.KUFRNEW_TYPE
+        , r.KUFRNEW_TYPENAME
+        , r.KUFRNEW_UZDL
+        , r.REAPPROVACTIVITYID
+        , r.REAPPROV_NO
+        , r.REAPPROVstart_flg
+        , r.REAPPROVend_flg
+        , r.REAPPROVACTUALEND
+        , r.REAPPROVACTUALSTART
+        , r.REAPPROVCREATEDON
+        , r.REAPPROVNEW_APPROVALRESULT
+        , r.REAPPROVNEW_APPROVALRESULTNAME
+        , r.REAPPROVNEW_COMMENTS
+        , r.REAPPROVNEW_COUNTER_FULLTIME
+        , r.REAPPROVNEW_COUNTER_WORKTIME
+        , r.REAPPROVNEW_HISTORY
+        , r.REAPPROVNEW_TYPE
+        , r.REAPPROVNEW_TYPENAME
+        , r.REAPPROVNEW_UZDL
     from (
         with l as (SELECT LEVEL as rn FROM DUAL CONNECT BY LEVEL <= (select greatest((select nvl(max(rn),0) from DWH.LEASROUT_TASKNEW_100000045_TMP),
-                                                                                     (select nvl(max(rn),0) from DWH.LEASROUT_TASKNEW_10009_TMP),
-                                                                                     (select nvl(max(rn),0) from DWH.LEASROUT_TASKNEW_10009KUF_TMP),
-                                                                                     (select nvl(max(rn),0) from DWH.LEASROUT_TASKNEW_10011_TMP),
-                                                                                     (select nvl(max(rn),0) from DWH.LEASROUT_TASKNEW_10015_TMP),
-                                                                                     (select nvl(max(rn),0) from DWH.LEASROUT_TASKNEW_10016_TMP),
-                                                                                     (select nvl(max(rn),0) from DWH.LEASROUT_TASKNEW_10029_TMP),
-                                                                                     (select nvl(max(rn),0) from DWH.LEASROUT_TASKNEW_10031_TMP),
-                                                                                     (select nvl(max(rn),0) from DWH.LEASROUT_TASKNEW_100032_TMP),
-                                                                                     (select nvl(max(rn),0) from DWH.LEASROUT_TASKNEW_100032OD_TMP)) from dual)
+                                                                      (select nvl(max(rn),0) from DWH.LEASROUT_TASKNEW_10009_TMP),
+                                                                      (select nvl(max(rn),0) from DWH.LEASROUT_TASKNEW_10009KUF_TMP),
+                                                                      (select nvl(max(rn),0) from DWH.LEASROUT_TASKNEW_10011_TMP),
+                                                                      (select nvl(max(rn),0) from DWH.LEASROUT_TASKNEW_10015_TMP),
+                                                                      (select nvl(max(rn),0) from DWH.LEASROUT_TASKNEW_10016_TMP),
+                                                                      (select nvl(max(rn),0) from DWH.LEASROUT_TASKNEW_10029_TMP),
+                                                                      (select nvl(max(rn),0) from DWH.LEASROUT_TASKNEW_10031_TMP),
+                                                                      (select nvl(max(rn),0) from DWH.LEASROUT_TASKNEW_100032_TMP),
+                                                                      (select nvl(max(rn),0) from DWH.LEASROUT_TASKNEW_100032OD_TMP)) from dual)
         )
         select * from (
-            select r.opportunityid, r.COUNTEDON, l.rn l_rn, greatest(nvl(t45.rn_m,1), nvl(t09.rn_m,1), nvl(t09kuf.rn_m,1), nvl(t15.rn_m,1), nvl(t11.rn_m,1), nvl(t16.rn_m,1), nvl(t29.rn_m,1), nvl(t31.rn_m,1), nvl(t32.rn_m,1), nvl(t32od.rn_m,1)) gr
-                    ,r.CREDITMODELISCOUNTABLE
-                    ,r.FINANCESUM
-                    ,r.CREDITMODELRESULT
-                    ,r.NEW_FINANCESUM
-                    ,r.FRAUDMODELRESULT
-                    ,r.OPPORTUNITYCREDITRESULT
-                    ,r.OPPORTUNITYFRAUDRESULT
-                    ,r.PRODUCTOP
-                    ,r.SCORINGSCORE
-                    ,r.MODEL_TYPE
-                    ,r.calc_conditions
-                    ,r.ISPRESCORINGCALL
-                    ,r.model_settings
-                    ,t45.ACTIVITYID	as	VERACTIVITYID
-                    ,t45.rn	as	VER_NO
-                    ,t45.ACTUALEND	as	VERACTUALEND
-                    ,t45.ACTUALSTART	as	VERACTUALSTART
-                    ,t45.CREATEDON	as	VERCREATEDON
-                    ,t45.NEW_APPROVALRESULT	as	VERNEW_APPROVALRESULT
-                    ,t45.NEW_APPROVALRESULTNAME	as	VERNEW_APPROVALRESULTNAME
-                    ,t45.NEW_COMMENTS	as	VERNEW_COMMENTS
-                    ,t45.NEW_COUNTER_FULLTIME	as	VERNEW_COUNTER_FULLTIME
-                    ,t45.NEW_COUNTER_WORKTIME	as	VERNEW_COUNTER_WORKTIME
-                    ,t45.NEW_HISTORY	as	VERNEW_HISTORY
-                    ,t45.NEW_TYPE	as	VERNEW_TYPE
-                    ,t45.NEW_TYPENAME	as	VERNEW_TYPENAME
-                    ,t45.NEW_UZDL	as	VERNEW_UZDL
-                    ,t32.ACTIVITYID	as	RECONFIRMATIONACTIVITYID
-                    ,t32.rn	as	RECONFIRMATION_NO
-                    ,t32.ACTUALEND	as	RECONFIRMATIONACTUALEND
-                    ,t32.ACTUALSTART	as	RECONFIRMATIONACTUALSTART
-                    ,t32.CREATEDON	as	RECONFIRMATIONCREATEDON
-                    ,t32.NEW_APPROVALRESULT	as	RECONFIRMNEW_APPROVALRESULT
-                    ,t32.NEW_APPROVALRESULTNAME	as	RECONFIRMNEW_APPROVALRESULTNM
-                    ,t32.NEW_COMMENTS	as	RECONFIRMATIONNEW_COMMENTS
-                    ,t32.NEW_COUNTER_FULLTIME	as	RECONFIRMNEW_COUNTER_FULLTIME
-                    ,t32.NEW_COUNTER_WORKTIME	as	RECONFIRMNEW_COUNTER_WORKTIME
-                    ,t32.NEW_HISTORY	as	RECONFIRMATIONNEW_HISTORY
-                    ,t32.NEW_TYPE	as	RECONFIRMATIONNEW_TYPE
-                    ,t32.NEW_TYPENAME	as	RECONFIRMATIONNEW_TYPENAME
-                    ,t32.NEW_UZDL	as	RECONFIRMATIONNEW_UZDL
-                    ,t15.ACTIVITYID	as	EXPOYBACTIVITYID
-                    ,t15.rn	as	EXPOYB_NO
-                    ,t15.ACTUALEND	as	EXPOYBACTUALEND
-                    ,t15.ACTUALSTART	as	EXPOYBACTUALSTART
-                    ,t15.CREATEDON	as	EXPOYBCREATEDON
-                    ,t15.NEW_APPROVALRESULT	as	EXPOYBNEW_APPROVALRESULT
-                    ,t15.NEW_APPROVALRESULTNAME	as	EXPOYBNEW_APPROVALRESULTNAME
-                    ,t15.NEW_COMMENTS	as	EXPOYBNEW_COMMENTS
-                    ,t15.NEW_COUNTER_FULLTIME	as	EXPOYBNEW_COUNTER_FULLTIME
-                    ,t15.NEW_COUNTER_WORKTIME	as	EXPOYBNEW_COUNTER_WORKTIME
-                    ,t15.NEW_HISTORY	as	EXPOYBNEW_HISTORY
-                    ,t15.NEW_TYPE	as	EXPOYBNEW_TYPE
-                    ,t15.NEW_TYPENAME	as	EXPOYBNEW_TYPENAME
-                    ,t15.NEW_UZDL	as	EXPOYBNEW_UZDL
-                    ,t29.ACTIVITYID	as	REPOYBACTIVITYID
-                    ,t29.rn	as	REPOYB_NO
-                    ,t29.ACTUALEND	as	REPOYBACTUALEND
-                    ,t29.ACTUALSTART	as	REPOYBACTUALSTART
-                    ,t29.CREATEDON	as	REPOYBCREATEDON
-                    ,t29.NEW_APPROVALRESULT	as	REPOYBNEW_APPROVALRESULT
-                    ,t29.NEW_APPROVALRESULTNAME	as	REPOYBNEW_APPROVALRESULTNAME
-                    ,t29.NEW_COMMENTS	as	REPOYBNEW_COMMENTS
-                    ,t29.NEW_COUNTER_FULLTIME	as	REPOYBNEW_COUNTER_FULLTIME
-                    ,t29.NEW_COUNTER_WORKTIME	as	REPOYBNEW_COUNTER_WORKTIME
-                    ,t29.NEW_HISTORY	as	REPOYBNEW_HISTORY
-                    ,t29.NEW_TYPE	as	REPOYBNEW_TYPE
-                    ,t29.NEW_TYPENAME	as	REPOYBNEW_TYPENAME
-                    ,t29.NEW_UZDL	as	REPOYBNEW_UZDL
-                    ,t11.ACTIVITYID	as	EXPUAKRACTIVITYID
-                    ,t11.rn	as	EXPUAKR_NO
-                    ,t11.ACTUALEND	as	EXPUAKRACTUALEND
-                    ,t11.ACTUALSTART	as	EXPUAKRACTUALSTART
-                    ,t11.CREATEDON	as	EXPUAKRCREATEDON
-                    ,t11.NEW_APPROVALRESULT	as	EXPUAKRNEW_APPROVALRESULT
-                    ,t11.NEW_APPROVALRESULTNAME	as	EXPUAKRNEW_APPROVALRESULTNAME
-                    ,t11.NEW_COMMENTS	as	EXPUAKRNEW_COMMENTS
-                    ,t11.NEW_COUNTER_FULLTIME	as	EXPUAKRNEW_COUNTER_FULLTIME
-                    ,t11.NEW_COUNTER_WORKTIME	as	EXPUAKRNEW_COUNTER_WORKTIME
-                    ,t11.NEW_HISTORY	as	EXPUAKRNEW_HISTORY
-                    ,t11.NEW_TYPE	as	EXPUAKRNEW_TYPE
-                    ,t11.NEW_TYPENAME	as	EXPUAKRNEW_TYPENAME
-                    ,t11.NEW_UZDL	as	EXPUAKRNEW_UZDL
-                    ,t31.ACTIVITYID	as	REPUAKRACTIVITYID
-                    ,t31.rn	as	REPUAKR_NO
-                    ,t31.ACTUALEND	as	REPUAKRACTUALEND
-                    ,t31.ACTUALSTART	as	REPUAKRACTUALSTART
-                    ,t31.CREATEDON	as	REPUAKRCREATEDON
-                    ,t31.NEW_APPROVALRESULT	as	REPUAKRNEW_APPROVALRESULT
-                    ,t31.NEW_APPROVALRESULTNAME	as	REPUAKRNEW_APPROVALRESULTNAME
-                    ,t31.NEW_COMMENTS	as	REPUAKRNEW_COMMENTS
-                    ,t31.NEW_COUNTER_FULLTIME	as	REPUAKRNEW_COUNTER_FULLTIME
-                    ,t31.NEW_COUNTER_WORKTIME	as	REPUAKRNEW_COUNTER_WORKTIME
-                    ,t31.NEW_HISTORY	as	REPUAKRNEW_HISTORY
-                    ,t31.NEW_TYPE	as	REPUAKRNEW_TYPE
-                    ,t31.NEW_TYPENAME	as	REPUAKRNEW_TYPENAME
-                    ,t31.NEW_UZDL	as	REPUAKRNEW_UZDL
-                    ,t16.ACTIVITYID	as	UNDERWRITACTIVITYID
-                    ,t16.rn	as	UNDERWRIT_NO
-                    ,t16.ACTUALEND	as	UNDERWRITACTUALEND
-                    ,t16.ACTUALSTART	as	UNDERWRITACTUALSTART
-                    ,t16.CREATEDON	as	UNDERWRITCREATEDON
-                    ,t16.NEW_APPROVALRESULT	as	UNDERWRITNEW_APPROVALRESULT
-                    ,t16.NEW_APPROVALRESULTNAME	as	UNDWRITNEW_APPROVALRESULTNAME
-                    ,t16.NEW_COMMENTS	as	UNDERWRITNEW_COMMENTS
-                    ,t16.NEW_COUNTER_FULLTIME	as	UNDERWRITNEW_COUNTER_FULLTIME
-                    ,t16.NEW_COUNTER_WORKTIME	as	UNDERWRITNEW_COUNTER_WORKTIME
-                    ,t16.NEW_HISTORY	as	UNDERWRITNEW_HISTORY
-                    ,t16.NEW_TYPE	as	UNDERWRITNEW_TYPE
-                    ,t16.NEW_TYPENAME	as	UNDERWRITNEW_TYPENAME
-                    ,t16.NEW_UZDL	as	UNDERWRITNEW_UZDL
-                    ,t09.ACTIVITYID	as	SOLUTIONDESACTIVITYID
-                    ,t09.rn	as	SOLUTIONDES_NO
-                    ,t09.ACTUALEND	as	SOLUTIONDESACTUALEND
-                    ,t09.ACTUALSTART	as	SOLUTIONDESACTUALSTART
-                    ,t09.CREATEDON	as	SOLUTIONDESCREATEDON
-                    ,t09.NEW_APPROVALRESULT	as	SOLUTIONDESNEW_APPROVALRESULT
-                    ,t09.NEW_APPROVALRESULTNAME	as	SOLDESNEW_APPROVALRESULTNAME
-                    ,t09.NEW_COMMENTS	as	SOLUTIONDESNEW_COMMENTS
-                    ,t09.NEW_COUNTER_FULLTIME	as	SOLDESNEW_COUNTER_FULLTIME
-                    ,t09.NEW_COUNTER_WORKTIME	as	SOLNDESNEW_COUNTER_WORKTIME
-                    ,t09.NEW_HISTORY	as	SOLUTIONDESNEW_HISTORY
-                    ,t09.NEW_TYPE	as	SOLUTIONDESNEW_TYPE
-                    ,t09.NEW_TYPENAME	as	SOLUTIONDESNEW_TYPENAME
-                    ,t09.NEW_UZDL	as	SOLUTIONDESNEW_UZDL
-                    ,t09kuf.ACTIVITYID	as	SOLUTIONDESKUFRACTIVITYID
-                    ,t09kuf.rn	as	SOLUTIONDESKUFR_NO
-                    ,t09kuf.ACTUALEND	as	SOLUTIONDESKUFRACTUALEND
-                    ,t09kuf.ACTUALSTART	as	SOLUTIONDESKUFRACTUALSTART
-                    ,t09kuf.CREATEDON	as	SOLUTIONDESKUFRCREATEDON
-                    ,t09kuf.NEW_APPROVALRESULT	as	SOLDESKUFRNEW_APPROVALRESULT
-                    ,t09kuf.NEW_APPROVALRESULTNAME	as	SOLDESKUFRNEW_APPROVALRESULTNM
-                    ,t09kuf.NEW_COMMENTS	as	SOLUTIONDESKUFRNEW_COMMENTS
-                    ,t09kuf.NEW_COUNTER_FULLTIME	as	SOLDESKUFRNEW_COUNTER_FULLTIME
-                    ,t09kuf.NEW_COUNTER_WORKTIME	as	SOLDESKUFRNEW_COUNTER_WORKTIME
-                    ,t09kuf.NEW_HISTORY	as	SOLUTIONDESKUFRNEW_HISTORY
-                    ,t09kuf.NEW_TYPE	as	SOLUTIONDESKUFRNEW_TYPE
-                    ,t09kuf.NEW_TYPENAME	as	SOLUTIONDESKUFRNEW_TYPENAME
-                    ,t09kuf.NEW_UZDL	as	SOLUTIONDESKUFRNEW_UZDL
-                    ,t32od.ACTIVITYID	as	REAPPROVACTIVITYID
-                    ,t32od.rn	as	REAPPROV_NO
-                    ,t32od.ACTUALEND	as	REAPPROVACTUALEND
-                    ,t32od.ACTUALSTART	as	REAPPROVACTUALSTART
-                    ,t32od.CREATEDON	as	REAPPROVCREATEDON
-                    ,t32od.NEW_APPROVALRESULT	as	REAPPROVNEW_APPROVALRESULT
-                    ,t32od.NEW_APPROVALRESULTNAME	as	REAPPROVNEW_APPROVALRESULTNAME
-                    ,t32od.NEW_COMMENTS	as	REAPPROVNEW_COMMENTS
-                    ,t32od.NEW_COUNTER_FULLTIME	as	REAPPROVNEW_COUNTER_FULLTIME
-                    ,t32od.NEW_COUNTER_WORKTIME	as	REAPPROVNEW_COUNTER_WORKTIME
-                    ,t32od.NEW_HISTORY	as	REAPPROVNEW_HISTORY
-                    ,t32od.NEW_TYPE	as	REAPPROVNEW_TYPE
-                    ,t32od.NEW_TYPENAME	as	REAPPROVNEW_TYPENAME
-                    ,t32od.NEW_UZDL	as	REAPPROVNEW_UZDL
-            from DWH.LEASROUTING_RMD_TMP r
-                     full outer join l on 1=1
-                     left outer join DWH.LEASROUT_TASKNEW_100000045_TMP t45   on r.opportunityid = t45.opportunityid and r.COUNTEDON = t45.countedon and t45.rn = l.rn and t45.rn <= t45.rn_m
-                     left outer join DWH.LEASROUT_TASKNEW_10009_TMP t09       on r.opportunityid = t09.opportunityid and r.COUNTEDON = t09.countedon and t09.rn = l.rn and t09.rn <= t09.rn_m
-                     left outer join DWH.LEASROUT_TASKNEW_10009KUF_TMP t09kuf on r.opportunityid = t09kuf.opportunityid and r.COUNTEDON = t09kuf.countedon and t09kuf.rn = l.rn and t09kuf.rn <= t09kuf.rn_m
-                     left outer join DWH.LEASROUT_TASKNEW_10015_TMP t15 on r.opportunityid = t15.opportunityid and r.COUNTEDON = t15.countedon and t15.rn = l.rn and t15.rn <= t15.rn_m
-                     left outer join DWH.LEASROUT_TASKNEW_10011_TMP t11 on r.opportunityid = t11.opportunityid and r.COUNTEDON = t11.countedon and t11.rn = l.rn and t11.rn <= t11.rn_m
-                     left outer join DWH.LEASROUT_TASKNEW_10016_TMP t16 on r.opportunityid = t16.opportunityid and r.COUNTEDON = t16.countedon and t16.rn = l.rn and t16.rn <= t16.rn_m
-                     left outer join DWH.LEASROUT_TASKNEW_10029_TMP t29 on r.opportunityid = t29.opportunityid and r.COUNTEDON = t29.countedon and t29.rn = l.rn and t29.rn <= t29.rn_m
-                     left outer join DWH.LEASROUT_TASKNEW_10031_TMP t31 on r.opportunityid = t31.opportunityid and r.COUNTEDON = t31.countedon and t31.rn = l.rn and t31.rn <= t31.rn_m
-                     left outer join DWH.LEASROUT_TASKNEW_100032_TMP t32 on r.opportunityid = t32.opportunityid and r.COUNTEDON = t32.countedon and t32.rn = l.rn and t32.rn <= t32.rn_m
-                     left outer join DWH.LEASROUT_TASKNEW_100032OD_TMP t32od on r.opportunityid = t32od.opportunityid and r.COUNTEDON = t32od.countedon and t32od.rn = l.rn and t32od.rn <= t32od.rn_m
-            order by r.opportunityid, r.COUNTEDON, l.rn
+        select r.opportunityid, r.COUNTEDON, l.rn l_rn, greatest(nvl(t45.rn_m,1), nvl(t09.rn_m,1), nvl(t09kuf.rn_m,1), nvl(t15.rn_m,1), nvl(t11.rn_m,1), nvl(t16.rn_m,1), nvl(t29.rn_m,1), nvl(t31.rn_m,1), nvl(t32.rn_m,1), nvl(t32od.rn_m,1)) gr
+                ,r.CREDITMODELISCOUNTABLE
+                ,r.FINANCESUM
+                ,r.CREDITMODELRESULT
+                ,r.NEW_FINANCESUM
+                ,r.FRAUDMODELRESULT
+                ,r.OPPORTUNITYCREDITRESULT
+                ,r.OPPORTUNITYFRAUDRESULT
+                ,r.PRODUCTOP
+                ,r.SCORINGSCORE
+                ,r.MODEL_TYPE
+                ,r.calc_conditions
+                ,r.ISPRESCORINGCALL
+                ,r.model_settings
+            ,t45.ACTIVITYID	as	VERACTIVITYID
+            ,t45.rn	as	VER_NO
+            ,t45.start_flg verstart_flg
+            ,t45.end_flg verend_flg
+            ,t45.ACTUALEND	as	VERACTUALEND
+            ,t45.ACTUALSTART	as	VERACTUALSTART
+            ,t45.CREATEDON	as	VERCREATEDON
+            ,t45.NEW_APPROVALRESULT	as	VERNEW_APPROVALRESULT
+            ,t45.NEW_APPROVALRESULTNAME	as	VERNEW_APPROVALRESULTNAME
+            ,t45.NEW_COMMENTS	as	VERNEW_COMMENTS
+            ,t45.NEW_COUNTER_FULLTIME	as	VERNEW_COUNTER_FULLTIME
+            ,t45.NEW_COUNTER_WORKTIME	as	VERNEW_COUNTER_WORKTIME
+            ,t45.NEW_HISTORY	as	VERNEW_HISTORY
+            ,t45.NEW_TYPE	as	VERNEW_TYPE
+            ,t45.NEW_TYPENAME	as	VERNEW_TYPENAME
+            ,t45.NEW_UZDL	as	VERNEW_UZDL
+            ,t32.ACTIVITYID	as	RECONFIRMATIONACTIVITYID
+            ,t32.rn	as	RECONFIRMATION_NO
+            ,t32.start_flg RECONFIRMATIONstart_flg
+            ,t32.end_flg RECONFIRMATIONend_flg
+            ,t32.ACTUALEND	as	RECONFIRMATIONACTUALEND
+            ,t32.ACTUALSTART	as	RECONFIRMATIONACTUALSTART
+            ,t32.CREATEDON	as	RECONFIRMATIONCREATEDON
+            ,t32.NEW_APPROVALRESULT	as	RECONFIRMNEW_APPROVALRESULT
+            ,t32.NEW_APPROVALRESULTNAME	as	RECONFIRMNEW_APPROVALRESULTNM
+            ,t32.NEW_COMMENTS	as	RECONFIRMATIONNEW_COMMENTS
+            ,t32.NEW_COUNTER_FULLTIME	as	RECONFIRMNEW_COUNTER_FULLTIME
+            ,t32.NEW_COUNTER_WORKTIME	as	RECONFIRMNEW_COUNTER_WORKTIME
+            ,t32.NEW_HISTORY	as	RECONFIRMATIONNEW_HISTORY
+            ,t32.NEW_TYPE	as	RECONFIRMATIONNEW_TYPE
+            ,t32.NEW_TYPENAME	as	RECONFIRMATIONNEW_TYPENAME
+            ,t32.NEW_UZDL	as	RECONFIRMATIONNEW_UZDL
+            ,t15.ACTIVITYID	as	EXPOYBACTIVITYID
+            ,t15.rn	as	EXPOYB_NO
+            ,t15.start_flg EXPOYBstart_flg
+            ,t15.end_flg EXPOYBend_flg
+            ,t15.ACTUALEND	as	EXPOYBACTUALEND
+            ,t15.ACTUALSTART	as	EXPOYBACTUALSTART
+            ,t15.CREATEDON	as	EXPOYBCREATEDON
+            ,t15.NEW_APPROVALRESULT	as	EXPOYBNEW_APPROVALRESULT
+            ,t15.NEW_APPROVALRESULTNAME	as	EXPOYBNEW_APPROVALRESULTNAME
+            ,t15.NEW_COMMENTS	as	EXPOYBNEW_COMMENTS
+            ,t15.NEW_COUNTER_FULLTIME	as	EXPOYBNEW_COUNTER_FULLTIME
+            ,t15.NEW_COUNTER_WORKTIME	as	EXPOYBNEW_COUNTER_WORKTIME
+            ,t15.NEW_HISTORY	as	EXPOYBNEW_HISTORY
+            ,t15.NEW_TYPE	as	EXPOYBNEW_TYPE
+            ,t15.NEW_TYPENAME	as	EXPOYBNEW_TYPENAME
+            ,t15.NEW_UZDL	as	EXPOYBNEW_UZDL
+            ,t29.ACTIVITYID	as	REPOYBACTIVITYID
+            ,t29.rn	as	REPOYB_NO
+            ,t29.start_flg REPOYBstart_flg
+            ,t29.end_flg REPOYBend_flg
+            ,t29.ACTUALEND	as	REPOYBACTUALEND
+            ,t29.ACTUALSTART	as	REPOYBACTUALSTART
+            ,t29.CREATEDON	as	REPOYBCREATEDON
+            ,t29.NEW_APPROVALRESULT	as	REPOYBNEW_APPROVALRESULT
+            ,t29.NEW_APPROVALRESULTNAME	as	REPOYBNEW_APPROVALRESULTNAME
+            ,t29.NEW_COMMENTS	as	REPOYBNEW_COMMENTS
+            ,t29.NEW_COUNTER_FULLTIME	as	REPOYBNEW_COUNTER_FULLTIME
+            ,t29.NEW_COUNTER_WORKTIME	as	REPOYBNEW_COUNTER_WORKTIME
+            ,t29.NEW_HISTORY	as	REPOYBNEW_HISTORY
+            ,t29.NEW_TYPE	as	REPOYBNEW_TYPE
+            ,t29.NEW_TYPENAME	as	REPOYBNEW_TYPENAME
+            ,t29.NEW_UZDL	as	REPOYBNEW_UZDL
+            ,t11.ACTIVITYID	as	EXPUAKRACTIVITYID
+            ,t11.rn	as	EXPUAKR_NO
+            ,t11.start_flg EXPUAKRstart_flg
+            ,t11.end_flg EXPUAKRend_flg
+            ,t11.ACTUALEND	as	EXPUAKRACTUALEND
+            ,t11.ACTUALSTART	as	EXPUAKRACTUALSTART
+            ,t11.CREATEDON	as	EXPUAKRCREATEDON
+            ,t11.NEW_APPROVALRESULT	as	EXPUAKRNEW_APPROVALRESULT
+            ,t11.NEW_APPROVALRESULTNAME	as	EXPUAKRNEW_APPROVALRESULTNAME
+            ,t11.NEW_COMMENTS	as	EXPUAKRNEW_COMMENTS
+            ,t11.NEW_COUNTER_FULLTIME	as	EXPUAKRNEW_COUNTER_FULLTIME
+            ,t11.NEW_COUNTER_WORKTIME	as	EXPUAKRNEW_COUNTER_WORKTIME
+            ,t11.NEW_HISTORY	as	EXPUAKRNEW_HISTORY
+            ,t11.NEW_TYPE	as	EXPUAKRNEW_TYPE
+            ,t11.NEW_TYPENAME	as	EXPUAKRNEW_TYPENAME
+            ,t11.NEW_UZDL	as	EXPUAKRNEW_UZDL
+            ,t31.ACTIVITYID	as	REPUAKRACTIVITYID
+            ,t31.rn	as	REPUAKR_NO
+            ,t31.start_flg REPUAKRstart_flg
+            ,t31.end_flg REPUAKRend_flg
+            ,t31.ACTUALEND	as	REPUAKRACTUALEND
+            ,t31.ACTUALSTART	as	REPUAKRACTUALSTART
+            ,t31.CREATEDON	as	REPUAKRCREATEDON
+            ,t31.NEW_APPROVALRESULT	as	REPUAKRNEW_APPROVALRESULT
+            ,t31.NEW_APPROVALRESULTNAME	as	REPUAKRNEW_APPROVALRESULTNAME
+            ,t31.NEW_COMMENTS	as	REPUAKRNEW_COMMENTS
+            ,t31.NEW_COUNTER_FULLTIME	as	REPUAKRNEW_COUNTER_FULLTIME
+            ,t31.NEW_COUNTER_WORKTIME	as	REPUAKRNEW_COUNTER_WORKTIME
+            ,t31.NEW_HISTORY	as	REPUAKRNEW_HISTORY
+            ,t31.NEW_TYPE	as	REPUAKRNEW_TYPE
+            ,t31.NEW_TYPENAME	as	REPUAKRNEW_TYPENAME
+            ,t31.NEW_UZDL	as	REPUAKRNEW_UZDL
+            ,t16.ACTIVITYID	as	UNDERWRITACTIVITYID
+            ,t16.rn	as	UNDERWRIT_NO
+            ,t16.start_flg UNDERWRITstart_flg
+            ,t16.end_flg UNDERWRITend_flg
+            ,t16.ACTUALEND	as	UNDERWRITACTUALEND
+            ,t16.ACTUALSTART	as	UNDERWRITACTUALSTART
+            ,t16.CREATEDON	as	UNDERWRITCREATEDON
+            ,t16.NEW_APPROVALRESULT	as	UNDERWRITNEW_APPROVALRESULT
+            ,t16.NEW_APPROVALRESULTNAME	as	UNDWRITNEW_APPROVALRESULTNAME
+            ,t16.NEW_COMMENTS	as	UNDERWRITNEW_COMMENTS
+            ,t16.NEW_COUNTER_FULLTIME	as	UNDERWRITNEW_COUNTER_FULLTIME
+            ,t16.NEW_COUNTER_WORKTIME	as	UNDERWRITNEW_COUNTER_WORKTIME
+            ,t16.NEW_HISTORY	as	UNDERWRITNEW_HISTORY
+            ,t16.NEW_TYPE	as	UNDERWRITNEW_TYPE
+            ,t16.NEW_TYPENAME	as	UNDERWRITNEW_TYPENAME
+            ,t16.NEW_UZDL	as	UNDERWRITNEW_UZDL
+            ,t09.ACTIVITYID	as	klassACTIVITYID
+            ,t09.rn	as	klass_NO
+            ,t09.start_flg klassstart_flg
+            ,t09.end_flg klassend_flg
+            ,t09.ACTUALEND	as	klassACTUALEND
+            ,t09.ACTUALSTART	as	klassACTUALSTART
+            ,t09.CREATEDON	as	klassCREATEDON
+            ,t09.NEW_APPROVALRESULT	as	klassNEW_APPROVALRESULT
+            ,t09.NEW_APPROVALRESULTNAME	as	klassNEW_APPROVALRESULTNAME
+            ,t09.NEW_COMMENTS	as	klassNEW_COMMENTS
+            ,t09.NEW_COUNTER_FULLTIME	as	klassNEW_COUNTER_FULLTIME
+            ,t09.NEW_COUNTER_WORKTIME	as	klassNEW_COUNTER_WORKTIME
+            ,t09.NEW_HISTORY	as	klassNEW_HISTORY
+            ,t09.NEW_TYPE	as	klassNEW_TYPE
+            ,t09.NEW_TYPENAME	as	klassNEW_TYPENAME
+            ,t09.NEW_UZDL	as	klassNEW_UZDL
+            ,t09kuf.ACTIVITYID	as	KUFRACTIVITYID
+            ,t09kuf.rn	as	KUFR_NO
+            ,t09kuf.start_flg as kufrstart_flg
+            ,t09kuf.end_flg as kufrend_flg
+            ,t09kuf.ACTUALEND	as	KUFRACTUALEND
+            ,t09kuf.ACTUALSTART	as	KUFRACTUALSTART
+            ,t09kuf.CREATEDON	as	KUFRCREATEDON
+            ,t09kuf.NEW_APPROVALRESULT	as	KUFRNEW_APPROVALRESULT
+            ,t09kuf.NEW_APPROVALRESULTNAME	as	KUFRNEW_APPROVALRESULTNM
+            ,t09kuf.NEW_COMMENTS	as	KUFRNEW_COMMENTS
+            ,t09kuf.NEW_COUNTER_FULLTIME	as	KUFRNEW_COUNTER_FULLTIME
+            ,t09kuf.NEW_COUNTER_WORKTIME	as	KUFRNEW_COUNTER_WORKTIME
+            ,t09kuf.NEW_HISTORY	as	KUFRNEW_HISTORY
+            ,t09kuf.NEW_TYPE	as	KUFRNEW_TYPE
+            ,t09kuf.NEW_TYPENAME	as	KUFRNEW_TYPENAME
+            ,t09kuf.NEW_UZDL	as	KUFRNEW_UZDL
+            ,t32od.ACTIVITYID	as	REAPPROVACTIVITYID
+            ,t32od.rn	as	REAPPROV_NO
+            ,t32od.start_flg REAPPROVstart_flg
+            ,t32od.end_flg REAPPROVend_flg
+            ,t32od.ACTUALEND	as	REAPPROVACTUALEND
+            ,t32od.ACTUALSTART	as	REAPPROVACTUALSTART
+            ,t32od.CREATEDON	as	REAPPROVCREATEDON
+            ,t32od.NEW_APPROVALRESULT	as	REAPPROVNEW_APPROVALRESULT
+            ,t32od.NEW_APPROVALRESULTNAME	as	REAPPROVNEW_APPROVALRESULTNAME
+            ,t32od.NEW_COMMENTS	as	REAPPROVNEW_COMMENTS
+            ,t32od.NEW_COUNTER_FULLTIME	as	REAPPROVNEW_COUNTER_FULLTIME
+            ,t32od.NEW_COUNTER_WORKTIME	as	REAPPROVNEW_COUNTER_WORKTIME
+            ,t32od.NEW_HISTORY	as	REAPPROVNEW_HISTORY
+            ,t32od.NEW_TYPE	as	REAPPROVNEW_TYPE
+            ,t32od.NEW_TYPENAME	as	REAPPROVNEW_TYPENAME
+            ,t32od.NEW_UZDL	as	REAPPROVNEW_UZDL
+        from DWH.LEASROUTING_RMD_TMP r
+        full outer join l on 1=1
+        left outer join DWH.LEASROUT_TASKNEW_100000045_TMP t45   on r.opportunityid = t45.opportunityid and r.COUNTEDON = t45.countedon and t45.rn = l.rn and t45.rn <= t45.rn_m
+        left outer join DWH.LEASROUT_TASKNEW_10009_TMP t09       on r.opportunityid = t09.opportunityid and r.COUNTEDON = t09.countedon and t09.rn = l.rn and t09.rn <= t09.rn_m
+        left outer join DWH.LEASROUT_TASKNEW_10009KUF_TMP t09kuf on r.opportunityid = t09kuf.opportunityid and r.COUNTEDON = t09kuf.countedon and t09kuf.rn = l.rn and t09kuf.rn <= t09kuf.rn_m
+        left outer join DWH.LEASROUT_TASKNEW_10015_TMP t15 on r.opportunityid = t15.opportunityid and r.COUNTEDON = t15.countedon and t15.rn = l.rn and t15.rn <= t15.rn_m
+        left outer join DWH.LEASROUT_TASKNEW_10011_TMP t11 on r.opportunityid = t11.opportunityid and r.COUNTEDON = t11.countedon and t11.rn = l.rn and t11.rn <= t11.rn_m
+        left outer join DWH.LEASROUT_TASKNEW_10016_TMP t16 on r.opportunityid = t16.opportunityid and r.COUNTEDON = t16.countedon and t16.rn = l.rn and t16.rn <= t16.rn_m
+        left outer join DWH.LEASROUT_TASKNEW_10029_TMP t29 on r.opportunityid = t29.opportunityid and r.COUNTEDON = t29.countedon and t29.rn = l.rn and t29.rn <= t29.rn_m
+        left outer join DWH.LEASROUT_TASKNEW_10031_TMP t31 on r.opportunityid = t31.opportunityid and r.COUNTEDON = t31.countedon and t31.rn = l.rn and t31.rn <= t31.rn_m
+        left outer join DWH.LEASROUT_TASKNEW_100032_TMP t32 on r.opportunityid = t32.opportunityid and r.COUNTEDON = t32.countedon and t32.rn = l.rn and t32.rn <= t32.rn_m
+        left outer join DWH.LEASROUT_TASKNEW_100032OD_TMP t32od on r.opportunityid = t32od.opportunityid and r.COUNTEDON = t32od.countedon and t32od.rn = l.rn and t32od.rn <= t32od.rn_m
         ) where l_rn <= gr
     ) r
-             left outer join DWH.LEASROUTING_OPPORTUNITY_TMP o on r.opportunityid = o.opportunityid and r.countedon = o.countedon
-             left outer join DWH.LEASROUTING_ACCOUNT_TMP a on  r.opportunityid = a.opportunityid and r.countedon = a.countedon
-             left outer join DWH.LEASROUTING_RELLGROUP_TMP rg on r.opportunityid = rg.opportunityid and r.countedon = rg.countedon
-             left outer join DWH.LEASROUT_NEW_ACCOUNTGROUP_TMP ag on r.opportunityid = ag.opportunityid and r.countedon = ag.countedon
-             left outer join DWH.LEASROUTING_CONTACT_TMP c on r.opportunityid = c.opportunityid and r.countedon = c.countedon
-             left outer join DWH.LEASROUTING_NEW_HUMANDOCS_TMP hd on r.opportunityid = hd.opportunityid and r.countedon = hd.countedon
-             left outer join DWH.LEASROUTING_CRM_LEAD_TMP l on r.opportunityid = l.opportunityid and r.countedon = l.countedon
+    left outer join DWH.LEASROUTING_OPPORTUNITY_TMP o on r.opportunityid = o.opportunityid and r.countedon = o.countedon
+    left outer join DWH.LEASROUTING_ACCOUNT_TMP a on  r.opportunityid = a.opportunityid and r.countedon = a.countedon
+    left outer join DWH.LEASROUTING_RELLGROUP_TMP rg on r.opportunityid = rg.opportunityid and r.countedon = rg.countedon
+    left outer join DWH.LEASROUT_NEW_ACCOUNTGROUP_TMP ag on r.opportunityid = ag.opportunityid and r.countedon = ag.countedon
+    left outer join DWH.LEASROUTING_CONTACT_TMP c on r.opportunityid = c.opportunityid and r.countedon = c.countedon
+    left outer join DWH.LEASROUTING_NEW_HUMANDOCS_TMP hd on r.opportunityid = hd.opportunityid and r.countedon = hd.countedon
+    left outer join DWH.LEASROUTING_CRM_LEAD_TMP l on r.opportunityid = l.opportunityid and r.countedon = l.countedon
+    where not r.opportunityid is null
     !' using p_SNAPSHOT_DT;
 exception
     when others then

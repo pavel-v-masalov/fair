@@ -50,7 +50,12 @@ create table DWH.RMD
     fraudmodelversion              NUMBER,
     sessionkey                     NUMBER,
     insertationdate                DATE,
-    scoringscore                   NUMBER
+    scoringscore                   NUMBER,
+-- new
+    model_type                            VARCHAR2(100),
+    calc_conditions                       VARCHAR2(100),
+    isprescoringcall                      VARCHAR2(100),
+    model_settings                        VARCHAR2(100)
 );
 -- Create/Recreate indexes
 create index DWH.RMD_I01 on DWH.RMD (OPPORTUNITYNAME)

@@ -1,9 +1,12 @@
 drop table DWH.LEASROUT_TASKNEW_10029_TMP;
 
 create table DWH.LEASROUT_TASKNEW_10029_TMP nologging as
-select /*+ PARALLEL(4) */ t.*, max(t.rn) over (partition by opportunityid, COUNTEDON) rn_m from (
+select /*+ PARALLEL(4) */ t.*, max(t.rn) over (partition by opportunityid, COUNTEDON) rn_m,
+       case when CREATEDON >= COUNTEDON and CREATEDON < COUNTEDON2 then 1 else 0 end start_flg,
+       case when ACTUALEND >= COUNTEDON and ACTUALEND < COUNTEDON2 then 1 else 0 end end_flg
+from (
    select
-        r.opportunityid, r.COUNTEDON,
+        r.opportunityid, r.COUNTEDON,r.countedon2,
         row_number() over (partition by r.opportunityid, r.countedon order by 1 asc) rn,
        ACTIVITYID,
         ACTUALEND,
