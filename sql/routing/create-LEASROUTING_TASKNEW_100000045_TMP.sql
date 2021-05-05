@@ -26,6 +26,7 @@ from (
    join DWH.LEASROUTING_RMD_TMP r on r.opportunityid = t.regardingobjectid
     and ((t.ACTUALEND >= r.COUNTEDON and t.ACTUALEND < r.COUNTEDON2) or (t.CREATEDON >= r.COUNTEDON and t.CREATEDON < r.COUNTEDON2))
 where t.new_status = 100000002 and t.statecode = 1 and t.new_type = 100000045 and VALID_TO_DTTM = to_date('2400-01-01', 'yyyy-mm-dd')
+  and not (t.subject like '%ПИ %' or t.subject like '%Повторное%' or t.subject like '%Протокол изменений%')
 ) t
 ;
 

@@ -93,7 +93,6 @@ create table DM.LEASROUTING_MODELS
     verstart_flg number,
     verend_flg   number,
     veractualend                          DATE,
-    veractualstart                        DATE,
     vercreatedon                          DATE,
     vernew_approvalresult                 NUMBER,
     vernew_approvalresultname             VARCHAR2(1000),
@@ -104,92 +103,82 @@ create table DM.LEASROUTING_MODELS
     vernew_type                           NUMBER,
     vernew_typename                       VARCHAR2(1000),
     vernew_uzdl                           NUMBER,
-    reconfirmationactivityid              VARCHAR2(36),
-    reconfirmation_no                     NUMBER,
-    reconfirmationstart_flg number,
-    reconfirmationend_flg number,
-    reconfirmationactualend               DATE,
-    reconfirmationactualstart             DATE,
-    reconfirmationcreatedon               DATE,
-    RECONFIRMNEW_APPROVALRESULT      NUMBER,
-    RECONFIRMNEW_APPROVALRESULTNM  VARCHAR2(1000),
-    reconfirmationnew_comments            VARCHAR2(4000),
-    RECONFIRMNEW_COUNTER_FULLTIME    NUMBER,
-    RECONFIRMNEW_COUNTER_WORKTIME    NUMBER,
-    reconfirmationnew_history             VARCHAR2(4000),
-    reconfirmationnew_type                NUMBER,
-    reconfirmationnew_typename            VARCHAR2(1000),
-    reconfirmationnew_uzdl                NUMBER,
-    expoybactivityid                      VARCHAR2(36),
-    expoyb_no                             NUMBER,
-    expoybstart_flg number,
-    expoybend_flg number,
-    expoybactualend                       DATE,
-    expoybactualstart                     DATE,
-    expoybcreatedon                       DATE,
-    expoybnew_approvalresult              NUMBER,
-    expoybnew_approvalresultname          VARCHAR2(1000),
-    expoybnew_comments                    VARCHAR2(4000),
-    expoybnew_counter_fulltime            NUMBER,
-    expoybnew_counter_worktime            NUMBER,
-    expoybnew_history                     VARCHAR2(4000),
-    expoybnew_type                        NUMBER,
-    expoybnew_typename                    VARCHAR2(1000),
-    expoybnew_uzdl                        NUMBER,
-    repoybactivityid                      VARCHAR2(36),
-    repoyb_no                             NUMBER,
-    repoybstart_flg number,
-    repoybend_flg number,
-    repoybactualend                       DATE,
-    repoybactualstart                     DATE,
-    repoybcreatedon                       DATE,
-    repoybnew_approvalresult              NUMBER,
-    repoybnew_approvalresultname          VARCHAR2(1000),
-    repoybnew_comments                    VARCHAR2(4000),
-    REPOYBNEW_COUNTER_FULLTIME      NUMBER,
-    repoybnew_counter_worktime            NUMBER,
-    repoybnew_history                     VARCHAR2(4000),
-    repoybnew_type                        NUMBER,
-    repoybnew_typename                    VARCHAR2(1000),
-    repoybnew_uzdl                        NUMBER,
-    expuakractivityid                     VARCHAR2(36),
-    expuakr_no                            NUMBER,
-    expuakrstart_flg number,
-    expuakrend_flg number,
-    expuakractualend                      DATE,
-    expuakractualstart                    DATE,
-    expuakrcreatedon                      DATE,
-    expuakrnew_approvalresult             NUMBER,
-    expuakrnew_approvalresultname         VARCHAR2(1000),
-    expuakrnew_comments                   VARCHAR2(4000),
-    expuakrnew_counter_fulltime           NUMBER,
-    expuakrnew_counter_worktime           NUMBER,
-    expuakrnew_history                    VARCHAR2(4000),
-    expuakrnew_type                       NUMBER,
-    expuakrnew_typename                   VARCHAR2(1000),
-    expuakrnew_uzdl                       NUMBER,
-    repuakractivityid                     VARCHAR2(36),
-    repuakr_no                            NUMBER,
-    repuakrstart_flg number,
-    repuakrend_flg number,
-    repuakractualend                      DATE,
-    repuakractualstart                    DATE,
-    repuakrcreatedon                      DATE,
-    repuakrnew_approvalresult             NUMBER,
-    repuakrnew_approvalresultname         VARCHAR2(1000),
-    repuakrnew_comments                   VARCHAR2(4000),
-    repuakrnew_counter_fulltime           NUMBER,
-    repuakrnew_counter_worktime           NUMBER,
-    repuakrnew_history                    VARCHAR2(4000),
-    repuakrnew_type                       NUMBER,
-    repuakrnew_typename                   VARCHAR2(1000),
-    repuakrnew_uzdl                       NUMBER,
+    reveractivityid              VARCHAR2(36),
+    rever_no                     NUMBER,
+    reverstart_flg number,
+    reverend_flg number,
+    reveractualend               DATE,
+    revercreatedon               DATE,
+    reverNEW_APPROVALRESULT      NUMBER,
+    reverNEW_APPROVALRESULTNM  VARCHAR2(1000),
+    revernew_comments            VARCHAR2(4000),
+    reverNEW_COUNTER_FULLTIME    NUMBER,
+    reverNEW_COUNTER_WORKTIME    NUMBER,
+    revernew_history             VARCHAR2(4000),
+    revernew_type                NUMBER,
+    revernew_typename            VARCHAR2(1000),
+    revernew_uzdl                NUMBER,
+    UOBactivityid                      VARCHAR2(36),
+    UOB_no                             NUMBER,
+    UOBstart_flg number,
+    UOBend_flg number,
+    UOBactualend                       DATE,
+    UOBcreatedon                       DATE,
+    UOBnew_approvalresult              NUMBER,
+    UOBnew_approvalresultname          VARCHAR2(1000),
+    UOBnew_comments                    VARCHAR2(4000),
+    UOBnew_counter_fulltime            NUMBER,
+    UOBnew_counter_worktime            NUMBER,
+    UOBnew_history                     VARCHAR2(4000),
+    UOBnew_type                        NUMBER,
+    UOBnew_typename                    VARCHAR2(1000),
+    REUOBactivityid                      VARCHAR2(36),
+    REUOB_no                             NUMBER,
+    REUOBstart_flg number,
+    REUOBend_flg number,
+    REUOBactualend                       DATE,
+    REUOBcreatedon                       DATE,
+    REUOBnew_approvalresult              NUMBER,
+    REUOBnew_approvalresultname          VARCHAR2(1000),
+    REUOBnew_comments                    VARCHAR2(4000),
+    REUOBNEW_COUNTER_FULLTIME      NUMBER,
+    REUOBnew_counter_worktime            NUMBER,
+    REUOBnew_history                     VARCHAR2(4000),
+    REUOBnew_type                        NUMBER,
+    REUOBnew_typename                    VARCHAR2(1000),
+    UAKRactivityid                     VARCHAR2(36),
+    UAKR_no                            NUMBER,
+    UAKRstart_flg number,
+    UAKRend_flg number,
+    UAKRactualend                      DATE,
+    UAKRcreatedon                      DATE,
+    UAKRnew_approvalresult             NUMBER,
+    UAKRnew_approvalresultname         VARCHAR2(1000),
+    UAKRnew_comments                   VARCHAR2(4000),
+    UAKRnew_counter_fulltime           NUMBER,
+    UAKRnew_counter_worktime           NUMBER,
+    UAKRnew_history                    VARCHAR2(4000),
+    UAKRnew_type                       NUMBER,
+    UAKRnew_typename                   VARCHAR2(1000),
+    REUAKRactivityid                     VARCHAR2(36),
+    REUAKR_no                            NUMBER,
+    REUAKRstart_flg number,
+    REUAKRend_flg number,
+    REUAKRactualend                      DATE,
+    REUAKRcreatedon                      DATE,
+    REUAKRnew_approvalresult             NUMBER,
+    REUAKRnew_approvalresultname         VARCHAR2(1000),
+    REUAKRnew_comments                   VARCHAR2(4000),
+    REUAKRnew_counter_fulltime           NUMBER,
+    REUAKRnew_counter_worktime           NUMBER,
+    REUAKRnew_history                    VARCHAR2(4000),
+    REUAKRnew_type                       NUMBER,
+    REUAKRnew_typename                   VARCHAR2(1000),
     underwritactivityid                   VARCHAR2(36),
     underwrit_no                          NUMBER,
     underwritstart_flg number,
     underwritend_flg number,
     underwritactualend                    DATE,
-    underwritactualstart                  DATE,
     underwritcreatedon                    DATE,
     underwritnew_approvalresult           NUMBER,
     UNDWRITNEW_APPROVALRESULTNAME       VARCHAR2(1000),
@@ -199,13 +188,11 @@ create table DM.LEASROUTING_MODELS
     underwritnew_history                  VARCHAR2(4000),
     underwritnew_type                     NUMBER,
     underwritnew_typename                 VARCHAR2(1000),
-    underwritnew_uzdl                     NUMBER,
     klassactivityid                 VARCHAR2(36),
     klass_no                        NUMBER,
     klassstart_flg number,
     klassend_flg number,
     klassactualend                  DATE,
-    klassactualstart                DATE,
     klasscreatedon                  DATE,
     klassnew_approvalresult         NUMBER,
     klassNEW_APPROVALRESULTNAME     VARCHAR2(1000),
@@ -215,13 +202,11 @@ create table DM.LEASROUTING_MODELS
     klassnew_history                VARCHAR2(4000),
     klassnew_type                   NUMBER,
     klassnew_typename               VARCHAR2(1000),
-    klassnew_uzdl                   NUMBER,
     kufractivityid             VARCHAR2(36),
     kufr_no                    NUMBER,
     kufrstart_flg number,
     kufrend_flg number,
     kufractualend              DATE,
-    kufractualstart            DATE,
     kufrcreatedon              DATE,
     KUFRNEW_APPROVALRESULT     NUMBER,
     KUFRNEW_APPROVALRESULTNM VARCHAR2(1000),
@@ -231,13 +216,11 @@ create table DM.LEASROUTING_MODELS
     kufrnew_history            VARCHAR2(4000),
     kufrnew_type               NUMBER,
     kufrnew_typename           VARCHAR2(1000),
-    kufrnew_uzdl               NUMBER,
     reapprovactivityid                    VARCHAR2(36),
     reapprov_no                           NUMBER,
     reapprovstart_flg number,
     reapprovend_flg number,
     reapprovactualend                     DATE,
-    reapprovactualstart                   DATE,
     reapprovcreatedon                     DATE,
     reapprovnew_approvalresult            NUMBER,
     reapprovnew_approvalresultname        VARCHAR2(1000),
@@ -246,8 +229,7 @@ create table DM.LEASROUTING_MODELS
     reapprovnew_counter_worktime          NUMBER,
     reapprovnew_history                   VARCHAR2(4000),
     reapprovnew_type                      NUMBER,
-    reapprovnew_typename                  VARCHAR2(1000),
-    reapprovnew_uzdl                      NUMBER
+    reapprovnew_typename                  VARCHAR2(1000)
 );
 comment on column DM.LEASROUTING_MODELS.SNAPSHOT_DT	is 'Отчетная дата';
 comment on column DM.LEASROUTING_MODELS.ACCOUNTID	is 'Организация';
@@ -332,7 +314,6 @@ comment on column DM.LEASROUTING_MODELS.model_settings	is 'Кортеж включенных мод
 comment on column DM.LEASROUTING_MODELS.VERACTIVITYID	is 'Задача';
 comment on column DM.LEASROUTING_MODELS.VER_NO	is 'Номер задачи внутри расчёта';
 comment on column DM.LEASROUTING_MODELS.VERACTUALEND	is 'Фактическое окончание';
-comment on column DM.LEASROUTING_MODELS.VERACTUALSTART	is 'Фактическое начало';
 comment on column DM.LEASROUTING_MODELS.VERCREATEDON	is 'Дата создания';
 comment on column DM.LEASROUTING_MODELS.VERNEW_APPROVALRESULT	is 'Решение';
 comment on column DM.LEASROUTING_MODELS.VERNEW_APPROVALRESULTNAME	is 'Решение';
@@ -343,80 +324,70 @@ comment on column DM.LEASROUTING_MODELS.VERNEW_HISTORY	is 'История выполнения за
 comment on column DM.LEASROUTING_MODELS.VERNEW_TYPE	is 'Тип задачи';
 comment on column DM.LEASROUTING_MODELS.VERNEW_TYPENAME	is 'Тип задачи';
 comment on column DM.LEASROUTING_MODELS.VERNEW_UZDL	is 'Сделка в рамках УЗДЛ';
-comment on column DM.LEASROUTING_MODELS.RECONFIRMATIONACTIVITYID	is 'Задача';
-comment on column DM.LEASROUTING_MODELS.RECONFIRMATION_NO	is 'Номер задачи внутри расчёта';
-comment on column DM.LEASROUTING_MODELS.RECONFIRMATIONACTUALEND	is 'Фактическое окончание';
-comment on column DM.LEASROUTING_MODELS.RECONFIRMATIONACTUALSTART	is 'Фактическое начало';
-comment on column DM.LEASROUTING_MODELS.RECONFIRMATIONCREATEDON	is 'Дата создания';
-comment on column DM.LEASROUTING_MODELS.RECONFIRMNEW_APPROVALRESULT	is 'Решение';
-comment on column DM.LEASROUTING_MODELS.RECONFIRMNEW_APPROVALRESULTNM	is 'Решение';
-comment on column DM.LEASROUTING_MODELS.RECONFIRMATIONNEW_COMMENTS	is 'Результат выполнения задачи';
-comment on column DM.LEASROUTING_MODELS.RECONFIRMNEW_COUNTER_FULLTIME	is 'Полное время (мин.)';
-comment on column DM.LEASROUTING_MODELS.RECONFIRMNEW_COUNTER_WORKTIME	is 'Время работы с задачей (мин.)';
-comment on column DM.LEASROUTING_MODELS.RECONFIRMATIONNEW_HISTORY	is 'История выполнения задачи';
-comment on column DM.LEASROUTING_MODELS.RECONFIRMATIONNEW_TYPE	is 'Тип задачи';
-comment on column DM.LEASROUTING_MODELS.RECONFIRMATIONNEW_TYPENAME	is 'Тип задачи';
-comment on column DM.LEASROUTING_MODELS.RECONFIRMATIONNEW_UZDL	is 'Сделка в рамках УЗДЛ';
-comment on column DM.LEASROUTING_MODELS.EXPOYBACTIVITYID	is 'Задача';
-comment on column DM.LEASROUTING_MODELS.EXPOYB_NO	is 'Номер задачи внутри расчёта';
-comment on column DM.LEASROUTING_MODELS.EXPOYBACTUALEND	is 'Фактическое окончание';
-comment on column DM.LEASROUTING_MODELS.EXPOYBACTUALSTART	is 'Фактическое начало';
-comment on column DM.LEASROUTING_MODELS.EXPOYBCREATEDON	is 'Дата создания';
-comment on column DM.LEASROUTING_MODELS.EXPOYBNEW_APPROVALRESULT	is 'Решение';
-comment on column DM.LEASROUTING_MODELS.EXPOYBNEW_APPROVALRESULTNAME	is 'Решение';
-comment on column DM.LEASROUTING_MODELS.EXPOYBNEW_COMMENTS	is 'Результат выполнения задачи';
-comment on column DM.LEASROUTING_MODELS.EXPOYBNEW_COUNTER_FULLTIME	is 'Полное время (мин.)';
-comment on column DM.LEASROUTING_MODELS.EXPOYBNEW_COUNTER_WORKTIME	is 'Время работы с задачей (мин.)';
-comment on column DM.LEASROUTING_MODELS.EXPOYBNEW_HISTORY	is 'История выполнения задачи';
-comment on column DM.LEASROUTING_MODELS.EXPOYBNEW_TYPE	is 'Тип задачи';
-comment on column DM.LEASROUTING_MODELS.EXPOYBNEW_TYPENAME	is 'Тип задачи';
-comment on column DM.LEASROUTING_MODELS.EXPOYBNEW_UZDL	is 'Сделка в рамках УЗДЛ';
-comment on column DM.LEASROUTING_MODELS.REPOYBACTIVITYID	is 'Задача';
-comment on column DM.LEASROUTING_MODELS.REPOYB_NO	is 'Номер задачи внутри расчёта';
-comment on column DM.LEASROUTING_MODELS.REPOYBACTUALEND	is 'Фактическое окончание';
-comment on column DM.LEASROUTING_MODELS.REPOYBACTUALSTART	is 'Фактическое начало';
-comment on column DM.LEASROUTING_MODELS.REPOYBCREATEDON	is 'Дата создания';
-comment on column DM.LEASROUTING_MODELS.REPOYBNEW_APPROVALRESULT	is 'Решение';
-comment on column DM.LEASROUTING_MODELS.REPOYBNEW_APPROVALRESULTNAME	is 'Решение';
-comment on column DM.LEASROUTING_MODELS.REPOYBNEW_COMMENTS	is 'Результат выполнения задачи';
-comment on column DM.LEASROUTING_MODELS.REPOYBNEW_COUNTER_FULLTIME	is 'Полное время (мин.)';
-comment on column DM.LEASROUTING_MODELS.REPOYBNEW_COUNTER_WORKTIME	is 'Время работы с задачей (мин.)';
-comment on column DM.LEASROUTING_MODELS.REPOYBNEW_HISTORY	is 'История выполнения задачи';
-comment on column DM.LEASROUTING_MODELS.REPOYBNEW_TYPE	is 'Тип задачи';
-comment on column DM.LEASROUTING_MODELS.REPOYBNEW_TYPENAME	is 'Тип задачи';
-comment on column DM.LEASROUTING_MODELS.REPOYBNEW_UZDL	is 'Сделка в рамках УЗДЛ';
-comment on column DM.LEASROUTING_MODELS.EXPUAKRACTIVITYID	is 'Задача';
-comment on column DM.LEASROUTING_MODELS.EXPUAKR_NO	is 'Номер задачи внутри расчёта';
-comment on column DM.LEASROUTING_MODELS.EXPUAKRACTUALEND	is 'Фактическое окончание';
-comment on column DM.LEASROUTING_MODELS.EXPUAKRACTUALSTART	is 'Фактическое начало';
-comment on column DM.LEASROUTING_MODELS.EXPUAKRCREATEDON	is 'Дата создания';
-comment on column DM.LEASROUTING_MODELS.EXPUAKRNEW_APPROVALRESULT	is 'Решение';
-comment on column DM.LEASROUTING_MODELS.EXPUAKRNEW_APPROVALRESULTNAME	is 'Решение';
-comment on column DM.LEASROUTING_MODELS.EXPUAKRNEW_COMMENTS	is 'Результат выполнения задачи';
-comment on column DM.LEASROUTING_MODELS.EXPUAKRNEW_COUNTER_FULLTIME	is 'Полное время (мин.)';
-comment on column DM.LEASROUTING_MODELS.EXPUAKRNEW_COUNTER_WORKTIME	is 'Время работы с задачей (мин.)';
-comment on column DM.LEASROUTING_MODELS.EXPUAKRNEW_HISTORY	is 'История выполнения задачи';
-comment on column DM.LEASROUTING_MODELS.EXPUAKRNEW_TYPE	is 'Тип задачи';
-comment on column DM.LEASROUTING_MODELS.EXPUAKRNEW_TYPENAME	is 'Тип задачи';
-comment on column DM.LEASROUTING_MODELS.EXPUAKRNEW_UZDL	is 'Сделка в рамках УЗДЛ';
-comment on column DM.LEASROUTING_MODELS.REPUAKRACTIVITYID	is 'Задача';
-comment on column DM.LEASROUTING_MODELS.REPUAKR_NO	is 'Номер задачи внутри расчёта';
-comment on column DM.LEASROUTING_MODELS.REPUAKRACTUALEND	is 'Фактическое окончание';
-comment on column DM.LEASROUTING_MODELS.REPUAKRACTUALSTART	is 'Фактическое начало';
-comment on column DM.LEASROUTING_MODELS.REPUAKRCREATEDON	is 'Дата создания';
-comment on column DM.LEASROUTING_MODELS.REPUAKRNEW_APPROVALRESULT	is 'Решение';
-comment on column DM.LEASROUTING_MODELS.REPUAKRNEW_APPROVALRESULTNAME	is 'Решение';
-comment on column DM.LEASROUTING_MODELS.REPUAKRNEW_COMMENTS	is 'Результат выполнения задачи';
-comment on column DM.LEASROUTING_MODELS.REPUAKRNEW_COUNTER_FULLTIME	is 'Полное время (мин.)';
-comment on column DM.LEASROUTING_MODELS.REPUAKRNEW_COUNTER_WORKTIME	is 'Время работы с задачей (мин.)';
-comment on column DM.LEASROUTING_MODELS.REPUAKRNEW_HISTORY	is 'История выполнения задачи';
-comment on column DM.LEASROUTING_MODELS.REPUAKRNEW_TYPE	is 'Тип задачи';
-comment on column DM.LEASROUTING_MODELS.REPUAKRNEW_TYPENAME	is 'Тип задачи';
-comment on column DM.LEASROUTING_MODELS.REPUAKRNEW_UZDL	is 'Сделка в рамках УЗДЛ';
+comment on column DM.LEASROUTING_MODELS.reverACTIVITYID	is 'Задача';
+comment on column DM.LEASROUTING_MODELS.rever_NO	is 'Номер задачи внутри расчёта';
+comment on column DM.LEASROUTING_MODELS.reverACTUALEND	is 'Фактическое окончание';
+comment on column DM.LEASROUTING_MODELS.reverCREATEDON	is 'Дата создания';
+comment on column DM.LEASROUTING_MODELS.reverNEW_APPROVALRESULT	is 'Решение';
+comment on column DM.LEASROUTING_MODELS.reverNEW_APPROVALRESULTNM	is 'Решение';
+comment on column DM.LEASROUTING_MODELS.reverNEW_COMMENTS	is 'Результат выполнения задачи';
+comment on column DM.LEASROUTING_MODELS.reverNEW_COUNTER_FULLTIME	is 'Полное время (мин.)';
+comment on column DM.LEASROUTING_MODELS.reverNEW_COUNTER_WORKTIME	is 'Время работы с задачей (мин.)';
+comment on column DM.LEASROUTING_MODELS.reverNEW_HISTORY	is 'История выполнения задачи';
+comment on column DM.LEASROUTING_MODELS.reverNEW_TYPE	is 'Тип задачи';
+comment on column DM.LEASROUTING_MODELS.reverNEW_TYPENAME	is 'Тип задачи';
+comment on column DM.LEASROUTING_MODELS.reverNEW_UZDL	is 'Сделка в рамках УЗДЛ';
+comment on column DM.LEASROUTING_MODELS.UOBACTIVITYID	is 'Задача';
+comment on column DM.LEASROUTING_MODELS.UOB_NO	is 'Номер задачи внутри расчёта';
+comment on column DM.LEASROUTING_MODELS.UOBACTUALEND	is 'Фактическое окончание';
+comment on column DM.LEASROUTING_MODELS.UOBCREATEDON	is 'Дата создания';
+comment on column DM.LEASROUTING_MODELS.UOBNEW_APPROVALRESULT	is 'Решение';
+comment on column DM.LEASROUTING_MODELS.UOBNEW_APPROVALRESULTNAME	is 'Решение';
+comment on column DM.LEASROUTING_MODELS.UOBNEW_COMMENTS	is 'Результат выполнения задачи';
+comment on column DM.LEASROUTING_MODELS.UOBNEW_COUNTER_FULLTIME	is 'Полное время (мин.)';
+comment on column DM.LEASROUTING_MODELS.UOBNEW_COUNTER_WORKTIME	is 'Время работы с задачей (мин.)';
+comment on column DM.LEASROUTING_MODELS.UOBNEW_HISTORY	is 'История выполнения задачи';
+comment on column DM.LEASROUTING_MODELS.UOBNEW_TYPE	is 'Тип задачи';
+comment on column DM.LEASROUTING_MODELS.UOBNEW_TYPENAME	is 'Тип задачи';
+comment on column DM.LEASROUTING_MODELS.REUOBACTIVITYID	is 'Задача';
+comment on column DM.LEASROUTING_MODELS.REUOB_NO	is 'Номер задачи внутри расчёта';
+comment on column DM.LEASROUTING_MODELS.REUOBACTUALEND	is 'Фактическое окончание';
+comment on column DM.LEASROUTING_MODELS.REUOBCREATEDON	is 'Дата создания';
+comment on column DM.LEASROUTING_MODELS.REUOBNEW_APPROVALRESULT	is 'Решение';
+comment on column DM.LEASROUTING_MODELS.REUOBNEW_APPROVALRESULTNAME	is 'Решение';
+comment on column DM.LEASROUTING_MODELS.REUOBNEW_COMMENTS	is 'Результат выполнения задачи';
+comment on column DM.LEASROUTING_MODELS.REUOBNEW_COUNTER_FULLTIME	is 'Полное время (мин.)';
+comment on column DM.LEASROUTING_MODELS.REUOBNEW_COUNTER_WORKTIME	is 'Время работы с задачей (мин.)';
+comment on column DM.LEASROUTING_MODELS.REUOBNEW_HISTORY	is 'История выполнения задачи';
+comment on column DM.LEASROUTING_MODELS.REUOBNEW_TYPE	is 'Тип задачи';
+comment on column DM.LEASROUTING_MODELS.REUOBNEW_TYPENAME	is 'Тип задачи';
+comment on column DM.LEASROUTING_MODELS.UAKRACTIVITYID	is 'Задача';
+comment on column DM.LEASROUTING_MODELS.UAKR_NO	is 'Номер задачи внутри расчёта';
+comment on column DM.LEASROUTING_MODELS.UAKRACTUALEND	is 'Фактическое окончание';
+comment on column DM.LEASROUTING_MODELS.UAKRCREATEDON	is 'Дата создания';
+comment on column DM.LEASROUTING_MODELS.UAKRNEW_APPROVALRESULT	is 'Решение';
+comment on column DM.LEASROUTING_MODELS.UAKRNEW_APPROVALRESULTNAME	is 'Решение';
+comment on column DM.LEASROUTING_MODELS.UAKRNEW_COMMENTS	is 'Результат выполнения задачи';
+comment on column DM.LEASROUTING_MODELS.UAKRNEW_COUNTER_FULLTIME	is 'Полное время (мин.)';
+comment on column DM.LEASROUTING_MODELS.UAKRNEW_COUNTER_WORKTIME	is 'Время работы с задачей (мин.)';
+comment on column DM.LEASROUTING_MODELS.UAKRNEW_HISTORY	is 'История выполнения задачи';
+comment on column DM.LEASROUTING_MODELS.UAKRNEW_TYPE	is 'Тип задачи';
+comment on column DM.LEASROUTING_MODELS.UAKRNEW_TYPENAME	is 'Тип задачи';
+comment on column DM.LEASROUTING_MODELS.REUAKRACTIVITYID	is 'Задача';
+comment on column DM.LEASROUTING_MODELS.REUAKR_NO	is 'Номер задачи внутри расчёта';
+comment on column DM.LEASROUTING_MODELS.REUAKRACTUALEND	is 'Фактическое окончание';
+comment on column DM.LEASROUTING_MODELS.REUAKRCREATEDON	is 'Дата создания';
+comment on column DM.LEASROUTING_MODELS.REUAKRNEW_APPROVALRESULT	is 'Решение';
+comment on column DM.LEASROUTING_MODELS.REUAKRNEW_APPROVALRESULTNAME	is 'Решение';
+comment on column DM.LEASROUTING_MODELS.REUAKRNEW_COMMENTS	is 'Результат выполнения задачи';
+comment on column DM.LEASROUTING_MODELS.REUAKRNEW_COUNTER_FULLTIME	is 'Полное время (мин.)';
+comment on column DM.LEASROUTING_MODELS.REUAKRNEW_COUNTER_WORKTIME	is 'Время работы с задачей (мин.)';
+comment on column DM.LEASROUTING_MODELS.REUAKRNEW_HISTORY	is 'История выполнения задачи';
+comment on column DM.LEASROUTING_MODELS.REUAKRNEW_TYPE	is 'Тип задачи';
+comment on column DM.LEASROUTING_MODELS.REUAKRNEW_TYPENAME	is 'Тип задачи';
 comment on column DM.LEASROUTING_MODELS.UNDERWRITACTIVITYID	is 'Задача';
 comment on column DM.LEASROUTING_MODELS.UNDERWRIT_NO	is 'Номер задачи внутри расчёта';
 comment on column DM.LEASROUTING_MODELS.UNDERWRITACTUALEND	is 'Фактическое окончание';
-comment on column DM.LEASROUTING_MODELS.UNDERWRITACTUALSTART	is 'Фактическое начало';
 comment on column DM.LEASROUTING_MODELS.UNDERWRITCREATEDON	is 'Дата создания';
 comment on column DM.LEASROUTING_MODELS.UNDERWRITNEW_APPROVALRESULT	is 'Решение';
 comment on column DM.LEASROUTING_MODELS.UNDWRITNEW_APPROVALRESULTNAME	is 'Решение';
@@ -426,11 +397,9 @@ comment on column DM.LEASROUTING_MODELS.UNDERWRITNEW_COUNTER_WORKTIME	is 'Время 
 comment on column DM.LEASROUTING_MODELS.UNDERWRITNEW_HISTORY	is 'История выполнения задачи';
 comment on column DM.LEASROUTING_MODELS.UNDERWRITNEW_TYPE	is 'Тип задачи';
 comment on column DM.LEASROUTING_MODELS.UNDERWRITNEW_TYPENAME	is 'Тип задачи';
-comment on column DM.LEASROUTING_MODELS.UNDERWRITNEW_UZDL	is 'Сделка в рамках УЗДЛ';
 comment on column DM.LEASROUTING_MODELS.klassACTIVITYID	is 'Задача';
 comment on column DM.LEASROUTING_MODELS.klass_NO	is 'Номер задачи внутри расчёта';
 comment on column DM.LEASROUTING_MODELS.klassACTUALEND	is 'Фактическое окончание';
-comment on column DM.LEASROUTING_MODELS.klassACTUALSTART	is 'Фактическое начало';
 comment on column DM.LEASROUTING_MODELS.klassCREATEDON	is 'Дата создания';
 comment on column DM.LEASROUTING_MODELS.klassNEW_APPROVALRESULT	is 'Решение';
 comment on column DM.LEASROUTING_MODELS.klassNEW_APPROVALRESULTNAME	is 'Решение';
@@ -440,11 +409,9 @@ comment on column DM.LEASROUTING_MODELS.klassNEW_COUNTER_WORKTIME	is 'Время рабо
 comment on column DM.LEASROUTING_MODELS.klassNEW_HISTORY	is 'История выполнения задачи';
 comment on column DM.LEASROUTING_MODELS.klassNEW_TYPE	is 'Тип задачи';
 comment on column DM.LEASROUTING_MODELS.klassNEW_TYPENAME	is 'Тип задачи';
-comment on column DM.LEASROUTING_MODELS.klassNEW_UZDL	is 'Сделка в рамках УЗДЛ';
 comment on column DM.LEASROUTING_MODELS.KUFRACTIVITYID	is 'Задача';
 comment on column DM.LEASROUTING_MODELS.KUFR_NO	is 'Номер задачи внутри расчёта';
 comment on column DM.LEASROUTING_MODELS.KUFRACTUALEND	is 'Фактическое окончание';
-comment on column DM.LEASROUTING_MODELS.KUFRACTUALSTART	is 'Фактическое начало';
 comment on column DM.LEASROUTING_MODELS.KUFRCREATEDON	is 'Дата создания';
 comment on column DM.LEASROUTING_MODELS.KUFRNEW_APPROVALRESULT	is 'Решение';
 comment on column DM.LEASROUTING_MODELS.KUFRNEW_APPROVALRESULTNM	is 'Решение';
@@ -454,11 +421,9 @@ comment on column DM.LEASROUTING_MODELS.KUFRNEW_COUNTER_WORKTIME	is 'Время работ
 comment on column DM.LEASROUTING_MODELS.KUFRNEW_HISTORY	is 'История выполнения задачи';
 comment on column DM.LEASROUTING_MODELS.KUFRNEW_TYPE	is 'Тип задачи';
 comment on column DM.LEASROUTING_MODELS.KUFRNEW_TYPENAME	is 'Тип задачи';
-comment on column DM.LEASROUTING_MODELS.KUFRNEW_UZDL	is 'Сделка в рамках УЗДЛ';
 comment on column DM.LEASROUTING_MODELS.REAPPROVACTIVITYID	is 'Задача';
 comment on column DM.LEASROUTING_MODELS.REAPPROV_NO	is 'Номер задачи внутри расчёта';
 comment on column DM.LEASROUTING_MODELS.REAPPROVACTUALEND	is 'Фактическое окончание';
-comment on column DM.LEASROUTING_MODELS.REAPPROVACTUALSTART	is 'Фактическое начало';
 comment on column DM.LEASROUTING_MODELS.REAPPROVCREATEDON	is 'Дата создания';
 comment on column DM.LEASROUTING_MODELS.REAPPROVNEW_APPROVALRESULT	is 'Решение';
 comment on column DM.LEASROUTING_MODELS.REAPPROVNEW_APPROVALRESULTNAME	is 'Решение';
@@ -468,4 +433,3 @@ comment on column DM.LEASROUTING_MODELS.REAPPROVNEW_COUNTER_WORKTIME	is 'Время р
 comment on column DM.LEASROUTING_MODELS.REAPPROVNEW_HISTORY	is 'История выполнения задачи';
 comment on column DM.LEASROUTING_MODELS.REAPPROVNEW_TYPE	is 'Тип задачи';
 comment on column DM.LEASROUTING_MODELS.REAPPROVNEW_TYPENAME	is 'Тип задачи';
-comment on column DM.LEASROUTING_MODELS.REAPPROVNEW_UZDL	is 'Сделка в рамках УЗДЛ';
