@@ -19,5 +19,4 @@ comment on column DWH.PD_CORP_EC.END_DT is 'Дата окончания действия записи (поль
 comment on column DWH.PD_CORP_EC.VALID_FROM_DTTM is 'Дата начала действия записи (техническая)';
 comment on column DWH.PD_CORP_EC.VALID_TO_DTTM is 'Дата окончания действия записи (техническая)';
 
-alter table DWH.PD_CORP add end_date date;
-comment on column DWH.PD_CORP.end_date is 'Дата окончания действия записи (пользовательская)';
+alter table DWH.PD_CORP_EC add file_id number;

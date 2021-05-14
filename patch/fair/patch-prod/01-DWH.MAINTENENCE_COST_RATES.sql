@@ -11,3 +11,4 @@ comment on column DWH.MAINTENENCE_COST_RATES.VALID_FROM_DTTM is 'ƒата начала дей
 comment on column DWH.MAINTENENCE_COST_RATES.VALID_TO_DTTM is 'ƒата окончани€ действи€ записи (техническа€)';
 comment on column DWH.MAINTENENCE_COST_RATES.START_DT is 'ƒата начала действи€ записи (пользовательска€)';
 comment on column DWH.MAINTENENCE_COST_RATES.END_DT is 'ƒата окончани€ действи€ записи (пользовательска€)';
+alter table DWH.MAINTENENCE_COST_RATES add file_id number;
