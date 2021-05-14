@@ -1,10 +1,3 @@
-begin
-    execute immediate 'drop table DWH.CURRATE_TYPES';
-exception when others then
-    null; -- no error
-end;
-/
-
 create table DWH.CURRATE_TYPES
 (
     currate_type_key    NUMBER not null,
@@ -14,7 +7,6 @@ create table DWH.CURRATE_TYPES
     fixfloat_cd         VARCHAR2(100),
     contracts_terms_key NUMBER
 );
-
 comment on table DWH.CURRATE_TYPES
     is 'Справочник типов ставки';
 comment on column DWH.CURRATE_TYPES.currate_type_key

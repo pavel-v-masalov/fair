@@ -18,3 +18,6 @@ comment on column DWH.PD_CORP_EC.START_DT is 'ƒата начала действи€ записи (польз
 comment on column DWH.PD_CORP_EC.END_DT is 'ƒата окончани€ действи€ записи (пользовательска€)';
 comment on column DWH.PD_CORP_EC.VALID_FROM_DTTM is 'ƒата начала действи€ записи (техническа€)';
 comment on column DWH.PD_CORP_EC.VALID_TO_DTTM is 'ƒата окончани€ действи€ записи (техническа€)';
+
+alter table DWH.PD_CORP add end_date date;
+comment on column DWH.PD_CORP.end_date is 'ƒата окончани€ действи€ записи (пользовательска€)';

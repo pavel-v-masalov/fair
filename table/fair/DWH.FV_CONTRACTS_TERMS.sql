@@ -1,10 +1,3 @@
-begin
-    execute immediate 'drop table DWH.FV_CONTRACTS_TERMS';
-exception when others then
-    null; -- no error
-end;
-/
-
 create table DWH.FV_CONTRACTS_TERMS
 (
     contracts_terms_key  NUMBER not null,

@@ -14,7 +14,7 @@ create table DWH.TREASURY_SPREAD (
     VALID_TO_DTTM DATE,
     constraint TREASURY_SPREAD_UK01 unique (TREASURY_SPREAD_TYPE, CURRENCY_LETTER_CD, FIXFLOAT, CONTRACTS_TERMS_KEY, VALID_TO_DTTM, END_DT) using index compress 4
 );
-comment on table DWH.TREASURY_SPREAD is 'Rомпенсирующиt спред и комиссиb';
+comment on table DWH.TREASURY_SPREAD is 'Компенсирующий спред и комиссия';
 comment on column DWH.TREASURY_SPREAD.TREASURY_SPREAD_TYPE is 'Тип спреда';
 comment on column DWH.TREASURY_SPREAD.CURRENCY_LETTER_CD is 'Валюта';
 comment on column DWH.TREASURY_SPREAD.FIXFLOAT is 'Тип ставки ставки';
