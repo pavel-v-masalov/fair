@@ -38,3 +38,4 @@ select * from dba_errors where owner = 'DM' and name in ('P_DIRECT_COST_RATES', 
 order by owner, name, line, position;
 
 
+select * from dm.fv_comissions;
