@@ -937,20 +937,20 @@ begin
         UNDERWRITNEW_HISTORY,
         UNDERWRITNEW_TYPE,
         UNDERWRITNEW_TYPENAME,
-        klassACTIVITYID,
-        klass_NO,
-        klassstart_flg,
-        klassend_flg,
-        klassACTUALEND,
-        klassCREATEDON,
-        klassNEW_APPROVALRESULT,
-        klassNEW_APPROVALRESULTNAME,
-        klassNEW_COMMENTS,
-        klassNEW_COUNTER_FULLTIME,
-        klassNEW_COUNTER_WORKTIME,
-        klassNEW_HISTORY,
-        klassNEW_TYPE,
-        klassNEW_TYPENAME,
+        klasactivityid,
+        klas_no,
+        klasstart_flg,
+        klasend_flg,
+        klasactualend,
+        klascreatedon,
+        klasnew_approvalresult,
+        klasNEW_APPROVALRESULTNAME,
+        klasnew_comments,
+        klasNEW_COUNTER_FULLTIME,
+        klasNEW_COUNTER_WORKTIME,
+        klasnew_history,
+        klasnew_type,
+        klasnew_typename,
         KUFRACTIVITYID,
         KUFR_NO,
         kufrstart_flg,
@@ -1162,20 +1162,20 @@ begin
         , r.UNDERWRITNEW_HISTORY
         , r.UNDERWRITNEW_TYPE
         , r.UNDERWRITNEW_TYPENAME
-        , r.klassACTIVITYID
-        , r.klass_NO
-        , r.klassstart_flg
-        , r.klassend_flg
-        , r.klassACTUALEND
-        , r.klassCREATEDON
-        , r.klassNEW_APPROVALRESULT
-        , r.klassNEW_APPROVALRESULTNAME
-        , r.klassNEW_COMMENTS
-        , r.klassNEW_COUNTER_FULLTIME
-        , r.klassNEW_COUNTER_WORKTIME
-        , r.klassNEW_HISTORY
-        , r.klassNEW_TYPE
-        , r.klassNEW_TYPENAME
+        , r.klasactivityid
+        , r.klas_no
+        , r.klasstart_flg
+        , r.klasend_flg
+        , r.klasactualend
+        , r.klascreatedon
+        , r.klasnew_approvalresult
+        , r.klasNEW_APPROVALRESULTNAME
+        , r.klasnew_comments
+        , r.klasNEW_COUNTER_FULLTIME
+        , r.klasNEW_COUNTER_WORKTIME
+        , r.klasnew_history
+        , r.klasnew_type
+        , r.klasnew_typename
         , r.KUFRACTIVITYID
         , r.KUFR_NO
         , r.kufrstart_flg
@@ -1331,20 +1331,20 @@ begin
             ,t16.NEW_HISTORY	as	UNDERWRITNEW_HISTORY
             ,t16.NEW_TYPE	as	UNDERWRITNEW_TYPE
             ,t16.NEW_TYPENAME	as	UNDERWRITNEW_TYPENAME
-            ,t09.ACTIVITYID	as	klassACTIVITYID
-            ,t09.rn	as	klass_NO
-            ,t09.start_flg klassstart_flg
-            ,t09.end_flg klassend_flg
-            ,t09.ACTUALEND	as	klassACTUALEND
-            ,t09.CREATEDON	as	klassCREATEDON
-            ,t09.NEW_APPROVALRESULT	as	klassNEW_APPROVALRESULT
-            ,t09.NEW_APPROVALRESULTNAME	as	klassNEW_APPROVALRESULTNAME
-            ,t09.NEW_COMMENTS	as	klassNEW_COMMENTS
-            ,t09.NEW_COUNTER_FULLTIME	as	klassNEW_COUNTER_FULLTIME
-            ,t09.NEW_COUNTER_WORKTIME	as	klassNEW_COUNTER_WORKTIME
-            ,t09.NEW_HISTORY	as	klassNEW_HISTORY
-            ,t09.NEW_TYPE	as	klassNEW_TYPE
-            ,t09.NEW_TYPENAME	as	klassNEW_TYPENAME
+            ,t09.ACTIVITYID	as	klasactivityid
+            ,t09.rn	as	klas_no
+            ,t09.start_flg klasstart_flg
+            ,t09.end_flg klasend_flg
+            ,t09.ACTUALEND	as	klasactualend
+            ,t09.CREATEDON	as	klascreatedon
+            ,t09.NEW_APPROVALRESULT	as	klasnew_approvalresult
+            ,t09.NEW_APPROVALRESULTNAME	as	klasNEW_APPROVALRESULTNAME
+            ,t09.NEW_COMMENTS	as	klasnew_comments
+            ,t09.NEW_COUNTER_FULLTIME	as	klasNEW_COUNTER_FULLTIME
+            ,t09.NEW_COUNTER_WORKTIME	as	klasNEW_COUNTER_WORKTIME
+            ,t09.NEW_HISTORY	as	klasnew_history
+            ,t09.NEW_TYPE	as	klasnew_type
+            ,t09.NEW_TYPENAME	as	klasnew_typename
             ,t09kuf.ACTIVITYID	as	KUFRACTIVITYID
             ,t09kuf.rn	as	KUFR_NO
             ,t09kuf.start_flg as kufrstart_flg

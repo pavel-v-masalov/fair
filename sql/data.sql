@@ -10,12 +10,12 @@ select t.*, rowid from DWH.MAINTENENCE_COST_RATES t;
 
             select *
             from DWH.CURRATES
-            where DENJ <= sysdate
-              and RATEPERIOD > 720
-              and RATENAME = 'arsfix'
-              and CURR = 'RUB'
-              and VALID_TO_DTTM = date '2400-01-01' and date '2020-06-03' between START_DT and END_DT
-            order by denj desc, RATEPERIOD asc;
+    where DENJ <= sysdate
+      and RATEPERIOD > 720
+      and RATENAME = 'arsfix'
+      and CURR = 'RUB'
+      and VALID_TO_DTTM = date '2400-01-01' and date '2020-06-03' between START_DT and END_DT
+    order by denj desc, RATEPERIOD asc;
 
 
 select *

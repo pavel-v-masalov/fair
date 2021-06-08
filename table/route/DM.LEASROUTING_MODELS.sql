@@ -188,20 +188,20 @@ create table DM.LEASROUTING_MODELS
     underwritnew_history                  VARCHAR2(4000),
     underwritnew_type                     NUMBER,
     underwritnew_typename                 VARCHAR2(1000),
-    klassactivityid                 VARCHAR2(36),
-    klass_no                        NUMBER,
-    klassstart_flg number,
-    klassend_flg number,
-    klassactualend                  DATE,
-    klasscreatedon                  DATE,
-    klassnew_approvalresult         NUMBER,
-    klassNEW_APPROVALRESULTNAME     VARCHAR2(1000),
-    klassnew_comments               VARCHAR2(4000),
-    klassNEW_COUNTER_FULLTIME       NUMBER,
-    klassNEW_COUNTER_WORKTIME       NUMBER,
-    klassnew_history                VARCHAR2(4000),
-    klassnew_type                   NUMBER,
-    klassnew_typename               VARCHAR2(1000),
+    klasactivityid                 VARCHAR2(36),
+    klas_no                        NUMBER,
+    klasstart_flg number,
+    klasend_flg number,
+    klasactualend                  DATE,
+    klascreatedon                  DATE,
+    klasnew_approvalresult         NUMBER,
+    klasNEW_APPROVALRESULTNAME     VARCHAR2(1000),
+    klasnew_comments               VARCHAR2(4000),
+    klasNEW_COUNTER_FULLTIME       NUMBER,
+    klasNEW_COUNTER_WORKTIME       NUMBER,
+    klasnew_history                VARCHAR2(4000),
+    klasnew_type                   NUMBER,
+    klasnew_typename               VARCHAR2(1000),
     kufractivityid             VARCHAR2(36),
     kufr_no                    NUMBER,
     kufrstart_flg number,
@@ -397,18 +397,18 @@ comment on column DM.LEASROUTING_MODELS.UNDERWRITNEW_COUNTER_WORKTIME	is 'Время 
 comment on column DM.LEASROUTING_MODELS.UNDERWRITNEW_HISTORY	is 'История выполнения задачи';
 comment on column DM.LEASROUTING_MODELS.UNDERWRITNEW_TYPE	is 'Тип задачи';
 comment on column DM.LEASROUTING_MODELS.UNDERWRITNEW_TYPENAME	is 'Тип задачи';
-comment on column DM.LEASROUTING_MODELS.klassACTIVITYID	is 'Задача';
-comment on column DM.LEASROUTING_MODELS.klass_NO	is 'Номер задачи внутри расчёта';
-comment on column DM.LEASROUTING_MODELS.klassACTUALEND	is 'Фактическое окончание';
-comment on column DM.LEASROUTING_MODELS.klassCREATEDON	is 'Дата создания';
-comment on column DM.LEASROUTING_MODELS.klassNEW_APPROVALRESULT	is 'Решение';
-comment on column DM.LEASROUTING_MODELS.klassNEW_APPROVALRESULTNAME	is 'Решение';
-comment on column DM.LEASROUTING_MODELS.klassNEW_COMMENTS	is 'Результат выполнения задачи';
-comment on column DM.LEASROUTING_MODELS.klassNEW_COUNTER_FULLTIME	is 'Полное время (мин.)';
-comment on column DM.LEASROUTING_MODELS.klassNEW_COUNTER_WORKTIME	is 'Время работы с задачей (мин.)';
-comment on column DM.LEASROUTING_MODELS.klassNEW_HISTORY	is 'История выполнения задачи';
-comment on column DM.LEASROUTING_MODELS.klassNEW_TYPE	is 'Тип задачи';
-comment on column DM.LEASROUTING_MODELS.klassNEW_TYPENAME	is 'Тип задачи';
+comment on column DM.LEASROUTING_MODELS.klasactivityid	is 'Задача';
+comment on column DM.LEASROUTING_MODELS.klas_no	is 'Номер задачи внутри расчёта';
+comment on column DM.LEASROUTING_MODELS.klasactualend	is 'Фактическое окончание';
+comment on column DM.LEASROUTING_MODELS.klascreatedon	is 'Дата создания';
+comment on column DM.LEASROUTING_MODELS.klasnew_approvalresult	is 'Решение';
+comment on column DM.LEASROUTING_MODELS.klasNEW_APPROVALRESULTNAME	is 'Решение';
+comment on column DM.LEASROUTING_MODELS.klasnew_comments	is 'Результат выполнения задачи';
+comment on column DM.LEASROUTING_MODELS.klasNEW_COUNTER_FULLTIME	is 'Полное время (мин.)';
+comment on column DM.LEASROUTING_MODELS.klasNEW_COUNTER_WORKTIME	is 'Время работы с задачей (мин.)';
+comment on column DM.LEASROUTING_MODELS.klasnew_history	is 'История выполнения задачи';
+comment on column DM.LEASROUTING_MODELS.klasnew_type	is 'Тип задачи';
+comment on column DM.LEASROUTING_MODELS.klasnew_typename	is 'Тип задачи';
 comment on column DM.LEASROUTING_MODELS.KUFRACTIVITYID	is 'Задача';
 comment on column DM.LEASROUTING_MODELS.KUFR_NO	is 'Номер задачи внутри расчёта';
 comment on column DM.LEASROUTING_MODELS.KUFRACTUALEND	is 'Фактическое окончание';
@@ -433,3 +433,5 @@ comment on column DM.LEASROUTING_MODELS.REAPPROVNEW_COUNTER_WORKTIME	is 'Время р
 comment on column DM.LEASROUTING_MODELS.REAPPROVNEW_HISTORY	is 'История выполнения задачи';
 comment on column DM.LEASROUTING_MODELS.REAPPROVNEW_TYPE	is 'Тип задачи';
 comment on column DM.LEASROUTING_MODELS.REAPPROVNEW_TYPENAME	is 'Тип задачи';
+
+create index DM.LEASROUTING_MODELS_i01 on DM.LEASROUTING_MODELS (snapshot_dt);
